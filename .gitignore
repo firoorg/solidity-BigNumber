@@ -1,0 +1,5 @@
+solidity-BigNumber.sublime-project
+solidity-BigNumber.sublime-workspace
+.DS_Store
+build/
+node_modules/
