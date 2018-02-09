@@ -9,7 +9,7 @@ const brorand = require('brorand');
 const bi = require("big-integer");
 
 contract('MockBigNumber', function(accounts) {
-  init_runs = 25; 
+  init_runs = 10; 
   for(var run=init_runs;run>0;run--){
 
 it("Division function: Run " + (init_runs-run) + " - create random inputs for A and B, div to get C, pass all and assert equality from contract", async function() {

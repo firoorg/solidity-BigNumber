@@ -45,18 +45,47 @@ The sign of the value is controlled artificially, as is the case with other big 
 
  The most significant bit (bitlen) is tracked throughout the lifespan of the BigNumber instance. when the caller creates a BigNumber they can also indicate this value (which the contract verifies), or allow the contract to compute it itself.
 
-Any proposed extensions, improvements, issue discoveries etc. are more than encouraged!
 
 ## Verification
-When performing computations that consume a lot of gas, it is advisable, where possible, to compute them off-chain and have them verified on-chain. In this library, this is possible with two functions: bn_div and inverse. in both cases, the user passes the result of each computation along with the computation's inputs, and the contracts verifies that they were computed correctly, before returning the result (this may be changed to returning a boolean for the external contract).
+When performing computations that consume a lot of gas, it is advisable, where possible, to compute them off-chain and have them verified on-chain. In this library, this is possible with two functions: bn_div and inverse. in both cases, the user passes the result of each computation along with the computation's inputs, and the contracts verifies that they were computed correctly, before returning the result.
 
 ## Development
 
-TBD
+This is a truffle project, with js dependancies in the package.json file.
+Ensure you have node/npm, then:
 
-### API
-TBD
+#### Install
+```
+$ npm install -g
+```
 
+#### Run truffle's testrpc
+```
+$ truffle develop
+```
+
+#### Compile contracts:
+```
+truffle(develop)> compile 
+```
+
+#### Deploy:
+```
+truffle(develop)> deploy 
+```
+
+#### Run tests:
+```
+truffle(develop)> test 
+```
+
+I usually use Remix (Offline dev mode) for the debugger, hooked up to a local testrpc instance (much faster for functions consuming more gas).
+
+Any proposed extensions, improvements, issue discoveries etc. are more than encouraged!
+
+## Reference
+
+TBD
 
 
 

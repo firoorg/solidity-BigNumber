@@ -1,15 +1,15 @@
 {
   "contractName": "BigNumber",
   "abi": [],
-  "bytecode": "0x60606040523415600e57600080fd5b603580601b6000396000f3006060604052600080fd00a165627a7a72305820408aaf4f74e0f12a67e14b1a2443c19e49d41f2eaa9931cd7e68135e848f90dd0029",
-  "deployedBytecode": "0x6060604052600080fd00a165627a7a72305820408aaf4f74e0f12a67e14b1a2443c19e49d41f2eaa9931cd7e68135e848f90dd0029",
+  "bytecode": "0x60606040523415600e57600080fd5b603580601b6000396000f3006060604052600080fd00a165627a7a72305820d8bc5d813846af4afa8819f88165efe117a0e9192066a3f3748572fdf73eb8dd0029",
+  "deployedBytecode": "0x6060604052600080fd00a165627a7a72305820d8bc5d813846af4afa8819f88165efe117a0e9192066a3f3748572fdf73eb8dd0029",
   "sourceMap": "26:36688:0:-;;;;;;;;;;;;;;;;;",
   "deployedSourceMap": "26:36688:0:-;;;;;",
   "source": "pragma solidity ^0.4.19;\n\nlibrary BigNumber {\n      \n    // BigNumber is defined as a struct named 'instance' to avoid naming conflicts.\n    // DO NOT ALLOW INSTANTIATING THIS DIRECTLY - use the '_new' functions defined below.\n    // Hoping in future Solidity will allow visibility modifiers on structs..\n    struct instance { \n        bytes val;\n        bool neg;\n        uint bitlen;\n    }\n\n    /** @dev _new: Create a new Bignumber instance.\n      *            overloading allows caller to obtionally pass bitlen where it is known - as it is cheaper to do off-chain and verify on-chain. \n      *            we assert input is in data structure as defined above, and that bitlen, if passed, is correct.\n      * parameter: bytes val - bignum value\n      * parameter: bool  neg - sign of value\n      * parameter: uint bitlen - bit length of value\n      * returns: instance r.\n      */\n    function _new(bytes val, bool neg) internal pure returns(instance r){ \n        require(val.length % 32 == 0);\n        r.val = val;\n        r.neg = neg;\n        r.bitlen = get_bit_length(val);\n    }\n\n    /** @dev Create a new Bignumber instance.\n      *\n      * parameter: bytes val - bignum value\n      * parameter: bool  neg - sign of value\n      * parameter: uint bitlen - bit length of value\n      * returns: instance r.\n      */\n    function _new(bytes val, bool neg, uint bitlen) internal pure returns(instance r){\n        uint val_msword; \n        assembly {val_msword := mload(add(val,0x20))} //get msword of result\n        require((val.length % 32 == 0) && (val_msword>>(bitlen%256)==1));\n        r.val = val;\n        r.neg = neg;\n        r.bitlen = bitlen;\n    }\n    \n    /** @dev prepare_add: Initially prepare bignum instances for addition operation; internally calls actual addition/subtraction, depending on inputs.\n      *                   In order to do correct addition or subtraction we have to handle the sign.\n      *                   This function discovers the sign of the result based on the inputs, and calls the correct operation.\n      *\n      * parameter: instance a - first instance\n      * parameter: instance b - second instance\n      * returns: instance r - addition of a & b.\n      */\n    function prepare_add(instance a, instance b) internal returns(instance r) {\n        instance memory zero = instance(hex\"0000000000000000000000000000000000000000000000000000000000000000\",false,0); \n        if(a.bitlen==0 && b.bitlen==0) return zero;\n        if(a.bitlen==0) return b;\n        if(b.bitlen==0) return a;  \n        bytes memory val;\n        uint bitlen;\n        int compare = cmp(a,b,false);\n\n        if(a.neg || b.neg){\n            if(a.neg && b.neg){\n                if(compare>=0) (val, bitlen) = bn_add(a.val,b.val,a.bitlen);\n                else (val, bitlen) = bn_add(b.val,a.val,b.bitlen);\n                r.neg = true;\n            }\n            else {\n                if(compare==1){\n                    (val, bitlen) = bn_sub(a.val,b.val);\n                    r.neg = a.neg;\n                }\n                else if(compare==-1){\n                    (val, bitlen) = bn_sub(b.val,a.val);\n                    r.neg = !a.neg;\n                }\n                else return zero;//one pos and one neg, and same value.\n            }\n        }\n        else{\n            if(compare>=0){ //a>=b\n                (val, bitlen) = bn_add(a.val,b.val,a.bitlen);\n            }\n            else {\n                (val, bitlen) = bn_add(b.val,a.val,b.bitlen);\n            }\n            r.neg = false;\n        }\n\n        r.val = val;\n        r.bitlen = bitlen;\n    }\n\n    /** @dev bn_add: takes two instance values and the bitlen of the max value, and adds them.\n      *              This function is private and only callable from prepare_add: therefore the values may be of different sizes, \n      *              in any order of size, and of different signs (handled in prepare_add).\n      *              As values may be of different sizes, inputs are considered starting from the least significant words, working back. \n      *              The function calculates the new bitlen (basically if bitlens are the same for max and min, max_bitlen++) and returns a new instance value.\n      *\n      * parameter: bytes max -  biggest value  (determined from prepare_add)\n      * parameter: bytes min -  smallest value (determined from prepare_add)\n      * parameter: uint max_bitlen -  bit length of max value.\n      * returns: bytes result - max + min.\n      * returns: uint - bit length of result.\n      */\n    function bn_add(bytes max, bytes min, uint max_bitlen) private pure returns (bytes memory, uint) {\n        bytes memory result;\n        assembly {\n\n            let result_start := msize()                                     // Get the highest available block of memory\n            \n            let uint_max := sub(0,1)                                        // uint max. achieved using uint underflow: 0xffff...ffff\n\n            let carry := 0\n\n            let max_ptr := add(max, mload(max))\n            let min_ptr := add(min, mload(min))                             // point to last word of each byte array.\n\n            let result_ptr := add(add(result_start,0x20), mload(max))         // set result_ptr end.\n\n            for { let i := mload(max) } eq(eq(i,0),0) { i := sub(i, 0x20) } { // for(int i=max_length; i!=0; i-=32)\n                let max_val := mload(max_ptr)                               // get next word for 'max'\n                switch gt(i,sub(mload(max),mload(min)))                         // if(i>(max_length-min_length)). while 'min' words are still available.\n                    case 1{ \n\n                        let min_val := mload(min_ptr)                       //      get next word for 'min'\n        \n                        mstore(result_ptr, add(add(max_val,min_val),carry)) //      result_word = max_word+min_word+carry\n                    \n                        switch gt(max_val, sub(uint_max,sub(min_val,carry)))     //      this switch block finds whether or not to set the carry bit for the next iteration.\n                            case 1  { carry := 1 }\n                            default {\n                                switch and(eq(max_val,uint_max),or(gt(carry,0), gt(min_val,0)))\n                                case 1 { carry := 1 }\n                                default{ carry := 0 }\n                            }\n                            \n                        min_ptr := sub(min_ptr,0x20)                       //       point to next 'min' word\n                    }\n                    default{                                               // else: remainder after 'min' words are complete.\n                        mstore(result_ptr, add(max_val,carry))             //       result_word = max_word+carry\n                        \n                        switch and( eq(uint_max,max_val), eq(carry,1) )         //       this switch block finds whether or not to set the carry bit for the next iteration.\n                            case 1  { carry := 1 }\n                            default { carry := 0 }\n                    }\n                result_ptr := sub(result_ptr,0x20)                         // point to next 'result' word\n                max_ptr := sub(max_ptr,0x20)                               // point to next 'max' word\n            }\n\n            switch eq(carry,0) \n                case 1{ result_start := add(result_start,0x20) }           // if carry is 0, increment result_start, ie. length word for result is now one word position ahead.\n                default { mstore(result_ptr, 1) }                          // else if carry is 1, store 1; overflow has occured, so length word remains in the same position.\n\n            result := result_start                                         // point 'result' bytes value to the correct address in memory\n            mstore(result,add(mload(max),mul(0x20,carry)))                   // store length of result. we are finished with the byte array.\n            \n            mstore(0x40, add(result,add(mload(result),0x20)))                // Update freemem pointer to point to new end of memory.\n        }\n        \n        //we now calculate the result's bit length.\n        //with addition, if we assume that some a is at least equal to some b, then the resulting bit length will be a's bit length or (a's bit length)+1, depending on carry bit.\n        //this is cheaper than calling get_bit_length.\n        uint msword; \n        assembly {msword := mload(add(result,0x20))}                          // get most significant word of result\n        if(msword>>(max_bitlen % 256)==1 || msword==1) ++max_bitlen;          // if msword's bit length is 1 greater than max_bitlen, OR overflow occured, new bitlen is max_bitlen+1. \n        \n        return (result, max_bitlen);\n    }\n\n    \n      /** @dev prepare_sub: Initially prepare bignum instances for addition operation; internally calls actual addition/subtraction, depending on inputs.\n      *                   In order to do correct addition or subtraction we have to handle the sign.\n      *                   This function discovers the sign of the result based on the inputs, and calls the correct operation.\n      *\n      * parameter: instance a - first instance\n      * parameter: instance b - second instance\n      * returns: instance r - a-b.\n      */  \n\n    function prepare_sub(instance a, instance b) internal returns(instance r) {\n        instance memory zero = instance(hex\"0000000000000000000000000000000000000000000000000000000000000000\",false,0); \n        bytes memory val;\n        int compare;\n        uint bitlen;\n        compare = cmp(a,b,false);\n        if(a.neg || b.neg) {\n            if(a.neg && b.neg){           \n                if(compare == 1) { \n                    (val,bitlen) = bn_sub(a.val,b.val); \n                    r.neg = true;\n                }\n                else if(compare == -1) { \n\n                    (val,bitlen) = bn_sub(b.val,a.val); \n                    r.neg = false;\n                }\n                else return zero;\n            }\n            else {\n                if(compare >= 0) (val,bitlen) = bn_add(a.val,b.val,a.bitlen);\n                else (val,bitlen) = bn_add(b.val,a.val,b.bitlen);\n                \n                r.neg = (a.neg) ? true : false;\n            }\n        }\n        else {\n            if(compare == 1) {\n                (val,bitlen) = bn_sub(a.val,b.val);\n                r.neg = false;\n             }\n            else if(compare == -1) { \n                (val,bitlen) = bn_sub(b.val,a.val);\n                r.neg = true;\n            }\n            else return zero; \n        }\n\n        r.val = val;\n        r.bitlen = bitlen;\n    }\n\n\n    /** @dev bn_sub: takes two instance values and subtracts them.\n      *              This function is private and only callable from prepare_add: therefore the values may be of different sizes, \n      *              in any order of size, and of different signs (handled in prepare_add).\n      *              As values may be of different sizes, inputs are considered starting from the least significant words, working back. \n      *              The function calculates the new bitlen (basically if bitlens are the same for max and min, max_bitlen++) and returns a new instance value.\n      *\n      * parameter: bytes max -  biggest value  (determined from prepare_add)\n      * parameter: bytes min -  smallest value (determined from prepare_add)\n      * parameter: uint max_bitlen -  bit length of max value.\n      * returns: bytes result - max + min.\n      * returns: uint - bit length of result.\n      */\n   function bn_sub(bytes max, bytes min) private pure returns (bytes memory, uint) {\n        bytes memory result;\n        uint carry = 0;\n        assembly {\n                \n            let result_start := msize()                                         // Get the highest available block of memory\n        \n            let uint_max := sub(0,1)                                            // uint max. achieved using uint underflow: 0xffff...ffff\n            let max_len := mload(max)\n            let min_len := mload(min)                                           // load lengths of inputs\n            \n            let len_diff := sub(max_len,min_len)                                //get differences in lengths.\n            \n            let max_ptr := add(max, max_len)\n            let min_ptr := add(min, min_len)                                    //go to end of arrays\n            let result_ptr := add(result_start, max_len)                        //point to least significant result word.\n            let memory_end := add(result_ptr,0x20)                              // save memory_end to update free memory pointer at the end.\n            \n            for { let i := max_len } eq(eq(i,0),0) { i := sub(i, 0x20) } {      // for(int i=max_length; i!=0; i-=32)\n                let max_val := mload(max_ptr)                                   // get next word for 'max'\n                switch gt(i,len_diff)                                           // if(i>(max_length-min_length)). while 'min' words are still available.\n                    case 1{ \n                        let min_val := mload(min_ptr)                           //      get next word for 'min'\n        \n                        mstore(result_ptr, sub(sub(max_val,min_val),carry))     //      result_word = (max_word-min_word)-carry\n                    \n                        switch or(lt(max_val, add(min_val,carry)), \n                               and(eq(min_val,uint_max), eq(carry,1)))          //      this switch block finds whether or not to set the carry bit for the next iteration.\n                            case 1  { carry := 1 }\n                            default { carry := 0 }\n                            \n                        min_ptr := sub(min_ptr,0x20)                            //      point to next 'result' word\n                    }\n                    default{                                                    // else: remainder after 'min' words are complete.\n\n                        mstore(result_ptr, sub(max_val,carry))                  //      result_word = max_word-carry\n                    \n                        switch and( eq(max_val,0), eq(carry,1) )                //      this switch block finds whether or not to set the carry bit for the next iteration.\n                            case 1  { carry := 1 }\n                            default { carry := 0 }\n\n                    }\n                result_ptr := sub(result_ptr,0x20)                              // point to next 'result' word\n                max_ptr    := sub(max_ptr,0x20)                                 // point to next 'max' word\n            }      \n\n            //the following code removes any leading words containing all zeroes in the result.\n            result_ptr := add(result_ptr,0x20)                                                 \n            for { } eq ( eq(mload(result_ptr), 0), 1) { result_ptr := add(result_ptr,0x20) } { //for(result_ptr+=32;; result==0; result_ptr+=32)\n               result_start := add(result_start, 0x20)                                         // push up the start pointer for the result..\n               max_len := sub(max_len,0x20)                                                    // and subtract a word (32 bytes) from the result length.\n            } \n\n            result := result_start                                                              // point 'result' bytes value to the correct address in memory\n            \n            mstore(result,max_len)                                                              // store length of result. we are finished with the byte array.\n            \n            mstore(0x40, memory_end)                                                            // Update freemem pointer.\n        }\n\n        \n        uint new_bitlen = get_bit_length(result);                                                 //calculate the result's bit length.\n        \n        return (result, new_bitlen);\n    }\n\n\n    /** @dev bn_mul: takes two instances and multiplys them. Order is irrelevant.\n      *              multiplication achieved using modexp precompile:\n      *                 (a * b) = (((a + b)**2 - (a - b)**2) / 4\n      *              squaring is done in op_and_square function.\n      *\n      * parameter: instance a \n      * parameter: instance b \n      * returns: bytes res - a*b.\n      */\n    function bn_mul(instance a, instance b) internal returns(instance res){\n\n        \n        res = op_and_square(a,b,0);                                // add_and_square = (a+b)^2\n\n        //no need to do subtraction part of the equation if a == b; if so, it has no effect on final result.\n        if(cmp(a,b,true)!=0){  \n        \n            instance memory sub_and_square = op_and_square(a,b,1); // sub_and_square = (a-b)^2\n        \n            res = prepare_sub(res,sub_and_square);                 // res = add_and_square - sub_and_square\n        }\n        res = right_shift(res, 2);                                 // res = res / 4\n        \n     }\n\n\n    /** @dev op_and_square: takes two instances, performs operation 'op' on them, and squares the result.\n      *                     bn_mul uses the multiplication by squaring method, ie. a*b == ((a+b)^2 - (a-b)^2)/4.\n      *                     using modular exponentation precompile for squaring. this requires taking a special modulus value of the form:\n      *                     modulus == '1|(0*n)', where n = 2 * bit length of (a 'op' b).\n      *\n      * parameter: instance a \n      * parameter: instance b \n      * parameter: int op \n      * returns: bytes res - (a'op'b) ^ 2.\n      */\n    function op_and_square(instance a, instance b, int op) private returns(instance res){\n        instance memory two = instance(hex\"0000000000000000000000000000000000000000000000000000000000000002\",false,2);        \n        \n        uint mod_index = 0;\n        uint first_word_modulus;\n        bytes memory _modulus;\n        \n        res = (op == 0) ? prepare_add(a,b) : prepare_sub(a,b); //op == 0: add, op == 1: sub.\n        uint res_bitlen = res.bitlen;\n        assembly { mod_index := mul(res_bitlen,2) }\n        first_word_modulus = uint(1) << ((mod_index % 256)); //set bit in first modulus word.\n        \n        //we pass the minimum modulus value which would return JUST the squaring part of the calculation; therefore the value may be many words long.\n        //This is done by:\n        //  - storing total modulus byte length\n        //  - storing first word of modulus with correct bit set\n        //  - updating the free memory pointer to come after total length.\n        _modulus = hex\"0000000000000000000000000000000000000000000000000000000000000000\";\n        assembly {\n            mstore(_modulus, mul(add(div(mod_index,256),1),0x20))  //store length of modulus\n            mstore(add(_modulus,0x20), first_word_modulus)         //set first modulus word\n            mstore(0x40, add(_modulus, add(mload(_modulus),0x20))) //update freemem pointer to be modulus index + length\n        }\n\n        //create modulus instance for modexp function\n        instance memory modulus; \n        modulus.val = _modulus;\n        modulus.neg = false;\n        modulus.bitlen = mod_index;\n\n        res = prepare_modexp(res,two,modulus); // ((a 'op' b) ^ 2 % modulus) == (a 'op' b) ^ 2.\n    }\n\n\n    /** @dev bn_div: takes three instances (a,b and result), and verifies that a/b == result.\n      *              Verifying a bigint division operation is far cheaper than actually doing the computation. \n      *              As this library is for verification of cryptographic schemes it makes more sense that this function be used in this way.\n      *              (a/b = result) == (a = b * result)\n      *              Integer division only; therefore:\n      *                verify ((b*result) + (a % (b*result))) == a.\n      *              eg. 17/7 == 2:\n      *                verify  (7*2) + (17 % (7*2)) == 17.\n      *              the function returns the 'result' param passed on successful validation. returning a bool on successful validation is an option, \n      *              however it makes more sense in the context of the calling contract that it should return the result. \n      *\n      * parameter: instance a \n      * parameter: instance b \n      * parameter: instance result\n      * returns: 'result' param. \n      */\n    function bn_div(instance a, instance b, instance result) internal returns(instance){\n\n\n        if(a.neg==true || b.neg==true){ //first handle sign.\n            if (a.neg==true && b.neg==true) require(result.neg==false);\n            else require(result.neg==true);\n        } else require(result.neg==false);\n        \n        instance memory zero = instance(hex\"0000000000000000000000000000000000000000000000000000000000000000\",false,0);\n\n        require(!(cmp(b,zero,true)==0)); //require denominator to not be zero.\n\n        if(cmp(result,zero,true)==0){                //if result is 0:\n            if(cmp(a,b,true)==-1) return result;     // return zero if a<b (numerator < denominator)\n            else throw;                              // else fail.\n        }      \n\n        instance memory fst = bn_mul(b,result); // do multiplication (b * result)\n        if(cmp(fst,a,true)==0) return result;  // check if we already have a (ie. no remainder after division). if so, no mod necessary, and return result.\n\n        instance memory one = instance(hex\"0000000000000000000000000000000000000000000000000000000000000001\",false,1);\n        instance memory snd = prepare_modexp(a,one,fst); //a mod (b*result)\n\n        require(cmp(prepare_add(fst,snd),a,true)==0); // ((b*result) + a % (b*result)) == a\n\n        return result;\n    }\n\n\n    function bn_mod(instance a, instance mod) internal view returns(instance res){\n      instance memory one = instance(hex\"0000000000000000000000000000000000000000000000000000000000000001\",false,1);\n      res = prepare_modexp(a,one,mod);\n    }\n\n\n    /** @dev prepare_modexp: takes base, exponent, and modulus, internally computes base^exponent % modulus, and creates new instance.\n      *                      this function is overloaded: it assumes the exponent is positive. if not, the other method is used, whereby the inverse of the base is also passed.\n      *\n      * parameter: instance base \n      * parameter: instance exponent\n      * parameter: instance modulus\n      * returns: instance result.\n      */    \n    function prepare_modexp(instance base, instance exponent, instance modulus) internal view returns(instance result) {\n        require(exponent.neg==false); //if exponent is negative, other method with this same name should be used.\n\n        bytes memory _result = modexp(base.val,exponent.val,modulus.val);\n        //get bitlen of result (TODO: optimise. we know bitlen is in the same byte as the modulus bitlen byte)\n        uint bitlen;\n        assembly { bitlen := mload(add(_result,0x20))}\n        bitlen = get_word_length(bitlen) + (((_result.length/32)-1)*256); \n\n        result.val = _result;\n        result.neg = (base.neg==false || base.neg && is_odd(exponent)==0) ? false : true; //TODO review this. \n        result.bitlen = bitlen;\n        return result;\n     }\n\n    /** @dev prepare_modexp: takes base, base inverse, exponent, and modulus, asserts inverse(base)==base inverse, \n      *                      internally computes base_inverse^exponent % modulus and creates new instance.\n      *                      this function is overloaded: it assumes the exponent is negative. \n      *                      if not, the other method is used, where the inverse of the base is not passed.\n      *\n      * parameter: instance base\n      * parameter: instance base_inverse \n      * parameter: instance exponent\n      * parameter: instance modulus\n      * returns: instance result.\n      */ \n     function prepare_modexp(instance base, instance base_inverse, instance exponent, instance modulus) internal view returns(instance result) {\n        // base^-exp = (base^-1)^exp\n        require(exponent.neg==true);\n\n        require(cmp(base_inverse, mod_inverse(base,modulus,base_inverse), true)==0); //assert base_inverse == inverse(base, modulus)\n            \n        exponent.neg = false; //make e positive\n\n        bytes memory _result = modexp(base_inverse.val,exponent.val,modulus.val);\n        //get bitlen of result (TODO: optimise. we know bitlen is in the same byte as the modulus bitlen byte)\n        uint bitlen;\n        assembly { bitlen := mload(add(_result,0x20))}\n        bitlen = get_word_length(bitlen) + (((_result.length/32)-1)*256); \n        result.val = _result;\n        result.neg = (base_inverse.neg==false || base.neg && is_odd(exponent)==0) ? false : true; //TODO review this. \n        result.bitlen = bitlen;\n        return result;\n     }\n \n\n    /** @dev modexp: Takes instance values for base, exp, mod and calls precompile for (_base^_exp)%^mod\n      *              Wrapper for built-in modexp (contract 0x5) as described here - https://github.com/ethereum/EIPs/pull/198\n      *\n      * parameter: bytes base\n      * parameter: bytes base_inverse \n      * parameter: bytes exponent\n      * returns: bytes ret.\n      */\n    function modexp(bytes memory _base, bytes memory _exp, bytes memory _mod) private view returns(bytes memory ret) {\n        assembly {\n            \n            let bl := mload(_base)\n            let el := mload(_exp)\n            let ml := mload(_mod)\n            \n            \n            let freemem := mload(0x40) // Free memory pointer is always stored at 0x40\n            \n            \n            mstore(freemem, bl)         // arg[0] = base.length @ +0\n            \n            mstore(add(freemem,32), el) // arg[1] = exp.length @ +32\n            \n            mstore(add(freemem,64), ml) // arg[2] = mod.length @ +64\n            \n            // arg[3] = base.bits @ + 96\n            // Use identity built-in (contract 0x4) as a cheap memcpy\n            let success := call(450, 0x4, 0, add(_base,32), bl, add(freemem,96), bl)\n            \n            // arg[4] = exp.bits @ +96+base.length\n            let size := add(96, bl)\n            success := call(450, 0x4, 0, add(_exp,32), el, add(freemem,size), el)\n            \n            // arg[5] = mod.bits @ +96+base.length+exp.length\n            size := add(size,el)\n            success := call(450, 0x4, 0, add(_mod,32), ml, add(freemem,size), ml)\n            \n            switch success case 0 { invalid() } //fail where we haven't enough gas to make the call\n\n            // Total size of input = 96+base.length+exp.length+mod.length\n            size := add(size,ml)\n            // Invoke contract 0x5, put return value right after mod.length, @ +96\n            success := call(sub(gas, 1350), 0x5, 0, freemem, size, add(96,freemem), ml)\n\n            let length := ml\n            let length_ptr := add(96,freemem)\n\n            ///the following code removes any leading words containing all zeroes in the result.\n            //start_ptr := add(start_ptr,0x20)\n            for { } eq ( eq(mload(length_ptr), 0), 1) { } {\n               length_ptr := add(length_ptr, 0x20)        //push up the start pointer for the result..\n               length := sub(length,0x20) //and subtract a word (32 bytes) from the result length.\n            } \n\n            ret := sub(length_ptr,0x20)\n            mstore(ret, length)\n            \n            // point to the location of the return value (length, bits)\n            //assuming mod length is multiple of 32, return value is already in the right format.\n            //function visibility is changed to internal to reflect this.\n            //ret := add(64,freemem) \n            \n            mstore(0x40, add(add(96, freemem),ml)) //deallocate freemem pointer\n        }        \n    }\n\n\n    /** @dev modmul: Takes instances for a, b, and modulus, and computes (a*b) % modulus\n      *              We call bn_mul for the two input values, before calling modexp, passing exponent as 1.\n      *              Sign is taken care of in sub-functions.\n      *\n      * parameter: instance a\n      * parameter: instance b\n      * parameter: instance modulus\n      * returns: instance res.\n      */\n    function modmul(instance a, instance b, instance modulus) internal view returns(instance res){       \n        res = bn_mod(bn_mul(a,b),modulus);       \n    }\n\n\n    /** @dev mod_inverse: Takes instances for base, modulus, and result, verifies (base*result)%modulus==1, and returns result.\n      *                   Similar to bn_div, it's far cheaper to verify an inverse operation on-chain than it is to calculate it, so we allow the user to pass their own result.\n      *\n      * parameter: instance base\n      * parameter: instance modulus\n      * parameter: instance user_result\n      * returns: instance user_result.\n      */\n    function mod_inverse(instance base, instance modulus, instance user_result) internal view returns(instance){\n        require(base.neg==false && modulus.neg==false); //assert positivity of inputs.\n            \n        /*\n         * the following proves:\n         * - user result passed is correct for values base and modulus\n         * - modular inverse exists for values base and modulus.\n         * otherwise it fails.\n         */        \n        instance memory one = instance(hex\"0000000000000000000000000000000000000000000000000000000000000001\",false,1);\n        require(cmp(modmul(base, user_result, modulus),one,true)==0);\n\n        return user_result;\n     }\n\n\n    /** @dev is_odd: returns 1 if instance value is an odd number and 0 otherwise.\n      *              \n      * parameter: instance _in\n      * returns: uint ret.\n      */  \n    function is_odd(instance _in) internal pure returns(uint ret){\n        assembly{\n            let in_ptr := add(mload(_in), mload(mload(_in))) //go to least significant word\n            ret := mod(mload(in_ptr),2)                      //..and mod it with 2. \n        }\n    }\n\n\n    /** @dev cmp: instance comparison. 'signed' parameter indiciates whether to consider the sign of the inputs.\n      *           'trigger' is used to decide this - \n      *              if both negative, invert the result; \n      *              if both positive (or signed==false), trigger has no effect;\n      *              if differing signs, we return immediately based on input.\n      *           returns -1 on a<b, 0 on a==b, 1 on a>b.\n      *           \n      * parameter: instance a\n      * parameter: instance b\n      * parameter: bool signed\n      * returns: int.\n      */\n    function cmp(instance a, instance b, bool signed) internal pure returns(int){\n        int trigger = 1;\n        if(signed){\n            if(a.neg && b.neg) trigger = -1;\n            else if(a.neg==false && b.neg==true) return 1;\n            else if(a.neg==true && b.neg==false) return -1;\n        }\n\n        if(a.bitlen>b.bitlen) return  1*trigger;\n        if(b.bitlen>a.bitlen) return -1*trigger;\n\n        uint a_ptr;\n        uint b_ptr;\n        uint a_word;\n        uint b_word;\n\n        uint len = a.val.length; //bitlen is same so no need to check length.\n\n        assembly{\n            a_ptr := add(mload(a),0x20) \n            b_ptr := add(mload(b),0x20)\n        }\n\n        for(uint i=0; i<len;i+=32){\n            assembly{\n                a_word := mload(add(a_ptr,i))\n                b_word := mload(add(b_ptr,i))\n            }\n\n            if(a_word>b_word) return 1*trigger;\n            if(b_word>a_word) return -1*trigger;\n\n        }\n\n        return 0; //same value.\n    }\n\n    function is_prime(instance dividend) internal pure returns(bool) {\n      //TODO\n    }    \n\n    /** @dev right_shift: right shift instance 'dividend' by 'value' bits.\n      *           \n      * parameter: instance a\n      * parameter: instance b\n      * parameter: bool signed\n      * returns: int.\n      */\n    function right_shift(instance dividend, uint value) internal pure returns(instance){\n        //TODO use memcpy for cheap rightshift where input is multiple of 8 (byte size)\n        bytes memory result;\n        uint word_shifted;\n        uint mask_shift = 256-value;\n        uint mask;\n        uint result_ptr;\n        uint max;\n        uint length = dividend.val.length;\n\n        assembly {\n            max := sub(0,32)\n            result_ptr := add(mload(dividend), length)   \n        }\n\n        for(uint i= length-32; i<max;i-=32){                 //for each word:\n            assembly{\n                word_shifted := mload(result_ptr)               //get next word\n                switch eq(i,0)                               //if i==0:\n                case 1 { mask := 0 }                         // handles msword: no mask needed.\n                default { mask := mload(sub(result_ptr,0x20)) } // else get mask.\n            }\n            word_shifted >>= value;                            //right shift current by value\n            mask <<= mask_shift;                               // left shift next significant word by mask_shift\n            assembly{ mstore(result_ptr, or(word_shifted,mask)) } // store OR'd mask and shifted value in-place\n            result_ptr-=32;                                       // point to next value.\n        }\n\n        assembly{\n            //the following code removes any leading words containing all zeroes in the result.\n            result_ptr := add(result_ptr,0x20)\n            for { } eq ( eq(mload(result_ptr), 0), 1) { } {\n               result_ptr := add(result_ptr, 0x20) //push up the start pointer for the result..\n               length  := sub(length,0x20) //and subtract a word (32 bytes) from the result length.\n            }\n            \n            result := sub(result_ptr,0x20)\n            mstore(result, length) \n        }\n        \n        dividend.val = result;\n        dividend.bitlen = dividend.bitlen-value;\n        return dividend;\n    }\n\n    function left_shift(instance a) internal pure returns(uint) {\n      //TODO\n    }\n\n    /** @dev get_bit_length: get the bit length of an instance value input.\n      *           \n      * parameter: bytes a\n      * returns: uint res.\n      */\n    function get_bit_length(bytes val) internal pure returns(uint res){\n        uint msword; \n        assembly {msword := mload(add(val,0x20))}          //get msword of result\n        res = get_word_length(msword) + (val.length-32)*8; //get bitlen pf msword, add to size of remaining words.\n    }\n\n    /** @dev get_word_length: get the word length of a uint input - ie. log2_256 (most significant bit of 256 bit value (one EVM word))\n      *                       credit: Tjaden Hess @ ethereum.stackexchange             \n      *           \n      * parameter: uint x\n      * returns: uint y.\n      */\n  function get_word_length(uint x) internal pure returns (uint y){\n       uint arg = x;\n       assembly {\n            x := sub(x,1)\n            x := or(x, div(x, 0x02))\n            x := or(x, div(x, 0x04))\n            x := or(x, div(x, 0x10))\n            x := or(x, div(x, 0x100))\n            x := or(x, div(x, 0x10000))\n            x := or(x, div(x, 0x100000000))\n            x := or(x, div(x, 0x10000000000000000))\n            x := or(x, div(x, 0x100000000000000000000000000000000))\n            x := add(x, 1)\n            let m := mload(0x40)\n            mstore(m,           0xf8f9cbfae6cc78fbefe7cdc3a1793dfcf4f0e8bbd8cec470b6a28a7a5a3e1efd)\n            mstore(add(m,0x20), 0xf5ecf1b3e9debc68e1d9cfabc5997135bfb7a7a3938b7b606b5b4b3f2f1f0ffe)\n            mstore(add(m,0x40), 0xf6e4ed9ff2d6b458eadcdf97bd91692de2d4da8fd2d0ac50c6ae9a8272523616)\n            mstore(add(m,0x60), 0xc8c0b887b0a8a4489c948c7f847c6125746c645c544c444038302820181008ff)\n            mstore(add(m,0x80), 0xf7cae577eec2a03cf3bad76fb589591debb2dd67e0aa9834bea6925f6a4a2e0e)\n            mstore(add(m,0xa0), 0xe39ed557db96902cd38ed14fad815115c786af479b7e83247363534337271707)\n            mstore(add(m,0xc0), 0xc976c13bb96e881cb166a933a55e490d9d56952b8d4e801485467d2362422606)\n            mstore(add(m,0xe0), 0x753a6d1b65325d0c552a4d1345224105391a310b29122104190a110309020100)\n            mstore(0x40, add(m, 0x100))\n            let magic := 0x818283848586878898a8b8c8d8e8f929395969799a9b9d9e9faaeb6bedeeff\n            let shift := 0x100000000000000000000000000000000000000000000000000000000000000\n            let a := div(mul(x, magic), shift)\n            y := div(mload(add(m,sub(255,a))), shift)\n            y := add(y, mul(256, gt(arg, 0x8000000000000000000000000000000000000000000000000000000000000000)))\n        }  \n        if(arg & arg-1 == 0 && x!=0) ++y; //where x is a power of two, result needs to be incremented. we use the power of two trick here\n    }\n}",
-  "sourcePath": "/Users/tadhgriordan/Documents/solidity-BigNumber/contracts/BigNumber.sol",
+  "sourcePath": "/Users/tadhgriordan/Documents/Work/Zcoin/solidity-BigNumber/contracts/BigNumber.sol",
   "ast": {
     "attributes": {
-      "absolutePath": "/Users/tadhgriordan/Documents/solidity-BigNumber/contracts/BigNumber.sol",
+      "absolutePath": "/Users/tadhgriordan/Documents/Work/Zcoin/solidity-BigNumber/contracts/BigNumber.sol",
       "exportedSymbols": {
         "BigNumber": [
           1471
@@ -279,7 +279,7 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 2352,
+                              "referencedDeclaration": 2295,
                               "type": "function (bool) pure",
                               "value": "require"
                             },
@@ -889,7 +889,7 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 2352,
+                              "referencedDeclaration": 2295,
                               "type": "function (bool) pure",
                               "value": "require"
                             },
@@ -4635,24 +4635,6 @@
                             "declaration": 313,
                             "isOffset": false,
                             "isSlot": false,
-                            "src": "5202:3:0",
-                            "valueSize": 1
-                          }
-                        },
-                        {
-                          "max": {
-                            "declaration": 313,
-                            "isOffset": false,
-                            "isSlot": false,
-                            "src": "5273:3:0",
-                            "valueSize": 1
-                          }
-                        },
-                        {
-                          "max": {
-                            "declaration": 313,
-                            "isOffset": false,
-                            "isSlot": false,
                             "src": "5002:3:0",
                             "valueSize": 1
                           }
@@ -4685,20 +4667,20 @@
                           }
                         },
                         {
-                          "result": {
-                            "declaration": 325,
+                          "max": {
+                            "declaration": 313,
                             "isOffset": false,
                             "isSlot": false,
-                            "src": "8047:6:0",
+                            "src": "5202:3:0",
                             "valueSize": 1
                           }
                         },
                         {
-                          "result": {
-                            "declaration": 325,
+                          "max": {
+                            "declaration": 313,
                             "isOffset": false,
                             "isSlot": false,
-                            "src": "8064:6:0",
+                            "src": "5273:3:0",
                             "valueSize": 1
                           }
                         },
@@ -4730,6 +4712,15 @@
                           }
                         },
                         {
+                          "max": {
+                            "declaration": 313,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "7900:3:0",
+                            "valueSize": 1
+                          }
+                        },
+                        {
                           "result": {
                             "declaration": 325,
                             "isOffset": false,
@@ -4739,11 +4730,20 @@
                           }
                         },
                         {
-                          "max": {
-                            "declaration": 313,
+                          "result": {
+                            "declaration": 325,
                             "isOffset": false,
                             "isSlot": false,
-                            "src": "7900:3:0",
+                            "src": "8064:6:0",
+                            "valueSize": 1
+                          }
+                        },
+                        {
+                          "result": {
+                            "declaration": 325,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "8047:6:0",
                             "valueSize": 1
                           }
                         }
@@ -9962,20 +9962,20 @@
                     "attributes": {
                       "externalReferences": [
                         {
-                          "mod_index": {
-                            "declaration": 650,
-                            "isOffset": false,
-                            "isSlot": false,
-                            "src": "18221:9:0",
-                            "valueSize": 1
-                          }
-                        },
-                        {
                           "res_bitlen": {
                             "declaration": 676,
                             "isOffset": false,
                             "isSlot": false,
                             "src": "18238:10:0",
+                            "valueSize": 1
+                          }
+                        },
+                        {
+                          "mod_index": {
+                            "declaration": 650,
+                            "isOffset": false,
+                            "isSlot": false,
+                            "src": "18221:9:0",
                             "valueSize": 1
                           }
                         }
@@ -11177,7 +11177,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 2352,
+                                          "referencedDeclaration": 2295,
                                           "type": "function (bool) pure",
                                           "value": "require"
                                         },
@@ -11291,7 +11291,7 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 2352,
+                                          "referencedDeclaration": 2295,
                                           "type": "function (bool) pure",
                                           "value": "require"
                                         },
@@ -11415,7 +11415,7 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 2352,
+                                  "referencedDeclaration": 2295,
                                   "type": "function (bool) pure",
                                   "value": "require"
                                 },
@@ -11672,7 +11672,7 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 2352,
+                              "referencedDeclaration": 2295,
                               "type": "function (bool) pure",
                               "value": "require"
                             },
@@ -12751,7 +12751,7 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 2352,
+                              "referencedDeclaration": 2295,
                               "type": "function (bool) pure",
                               "value": "require"
                             },
@@ -13552,7 +13552,7 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 2352,
+                              "referencedDeclaration": 2295,
                               "type": "function (bool) pure",
                               "value": "require"
                             },
@@ -14902,7 +14902,7 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 2352,
+                              "referencedDeclaration": 2295,
                               "type": "function (bool) pure",
                               "value": "require"
                             },
@@ -15016,7 +15016,7 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 2352,
+                              "referencedDeclaration": 2295,
                               "type": "function (bool) pure",
                               "value": "require"
                             },
@@ -17093,7 +17093,7 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 2352,
+                              "referencedDeclaration": 2295,
                               "type": "function (bool) pure",
                               "value": "require"
                             },
@@ -17433,7 +17433,7 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 2352,
+                              "referencedDeclaration": 2295,
                               "type": "function (bool) pure",
                               "value": "require"
                             },
@@ -22379,5 +22379,5 @@
   },
   "networks": {},
   "schemaVersion": "1.0.1",
-  "updatedAt": "2018-02-09T11:13:05.699Z"
+  "updatedAt": "2018-02-09T11:00:37.137Z"
 }

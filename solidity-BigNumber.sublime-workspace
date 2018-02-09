@@ -1,0 +1,396 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"mod_",
+				"mod_inverse"
+			],
+			[
+				"Big",
+				"BigNumberLib"
+			],
+			[
+				"b",
+				"b"
+			],
+			[
+				"b_",
+				"b_msb"
+			],
+			[
+				"call",
+				"calldatacopy"
+			],
+			[
+				"B",
+				"BigNumber"
+			],
+			[
+				"serial_",
+				"serial_number_commitment"
+			],
+			[
+				"new",
+				"new_BigNumber"
+			],
+			[
+				"sub",
+				"substr"
+			],
+			[
+				"to",
+				"toString"
+			],
+			[
+				"act",
+				"actual_result"
+			],
+			[
+				"exp",
+				"expected_result"
+			],
+			[
+				"c",
+				"c"
+			],
+			[
+				"l",
+				"length"
+			],
+			[
+				"0x0",
+				"0x00"
+			],
+			[
+				"h",
+				"h_exp"
+			],
+			[
+				"a",
+				"a_exp"
+			],
+			[
+				"uint",
+				"uint_size-1"
+			],
+			[
+				"s",
+				"s"
+			],
+			[
+				"ser",
+				"serial_number_sok"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 392.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"inst",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 444.0
+	},
+	"console":
+	{
+		"height": 0.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/Users/tadhgriordan/Documents/Work/Zcoin/solidity-BigNumber"
+	],
+	"file_history":
+	[
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zeth/contracts/zerocoin_logic.solx",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zeth/contracts/zcoin talk.txt",
+		"/Users/tadhgriordan/Desktop/Solidity - Notes.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zeth/contracts/zerocoin_pool.sol",
+		"/Users/tadhgriordan/Desktop/for github.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zeth/contracts/oraclizeAPI_0.5.sol",
+		"/Users/tadhgriordan/Desktop/poker analogy bitcoin.txt",
+		"/Users/tadhgriordan/Desktop/presentation.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zeth/contracts/Randomness.sol",
+		"/Users/tadhgriordan/Documents/Work/Bonnua/kraken-application",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zeth-notes/sliding window.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zeth-notes/architecture with oraclize.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zeth-notes/randomness research.txt",
+		"/Users/tadhgriordan/Documents/my-money/contracts/my_ballot.sol",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zeth-notes/oraclize tradeoffs.txr",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zeth-notes/ether transaction price formula.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/log of whats done.txtl",
+		"/Users/tadhgriordan/Desktop/todo 18th & 19th.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zeth/contracts/BigNumberLib.sol",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zeth-notes/full contract setup.tct",
+		"/Users/tadhgriordan/Documents/testrandom/mnemonic.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zeth-notes/struct encoding notes.txt",
+		"/Users/tadhgriordan/Documents/Programming/Guides/AWS Lambda - tutorials.txt",
+		"/Users/tadhgriordan/Documents/example.c",
+		"/Users/tadhgriordan/Desktop/coins_in.txt",
+		"/Users/tadhgriordan/Desktop/dailyreport.txt",
+		"/Users/tadhgriordan/Desktop/pros-cons apartments.txt",
+		"/Users/tadhgriordan/Documents/Money & Trading/towards 1 million.txt",
+		"/Users/tadhgriordan/Documents/Money & Trading/successful_patterns.txt",
+		"/Users/tadhgriordan/Desktop/TODO.txt",
+		"/Users/tadhgriordan/Documents/zerocoin-rem.sol",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zeth/contracts/MockBigNumberLib.sol",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zeth/test/BigNumberLib.js",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zeth/dependancies.js",
+		"/Users/tadhgriordan/Desktop/PROPERTIES WE'RE SEEING.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zeth/test/kate laptop choices.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zeth/build/contracts/MockBigNumberLib.json",
+		"/Users/tadhgriordan/Documents/Money & Trading/email-for-cryptoping.txt",
+		"/Users/tadhgriordan/Documents/Money & Trading/trading strategy.txt",
+		"/Users/tadhgriordan/Documents/Linda info.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer-shite/scratchpad.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer-shite/let's think about architecture.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/contracts/MockBigNumberLib.sol",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer-shite/architecture(s).txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zerocoin-priv/Zcoin Smart Contracts Team - RoadMap.txt",
+		"/Users/tadhgriordan/Documents/tax calc",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/test/remix_tests.sol",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/contracts/BigNumberLib.sol",
+		"/Users/tadhgriordan/Documents/Work/connection-plus/christmas - todo",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zerocoin-priv/edge cases.txt",
+		"/Users/tadhgriordan/Documents/Work/Bonnua/aib setup",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/test/BigNumberLib.js",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/build/contracts/BigNumberLib.json",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/test/video.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/test/MockBigNumberLib.sol",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/migrations/1_mockbignumberlib.js",
+		"/Users/tadhgriordan/Documents/Work/truffle-test/migrations/1_identity.js",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/migrations/mockbignumberlib.js",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/migrations/bignumberlib.js",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/migrations/1_initial_migration.js",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/tests.sol",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/contracts/Zerocoin.sol",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/zerocoin.sol",
+		"/Users/tadhgriordan/Documents/Work/Bonnua/registration.txt",
+		"/Users/tadhgriordan/Desktop/ciaran.txt",
+		"/Users/tadhgriordan/Documents/Work/IDAX/setting up.txt",
+		"/Users/tadhgriordan/Documents/ciaran.sol",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/bigint_functions.sol",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/a.sol",
+		"/Users/tadhgriordan/Documents/Programming/solidity tutorial notes",
+		"/Users/tadhgriordan/Documents/kate presents",
+		"/Users/tadhgriordan/Documents/IdentityFunction.sol",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/Handling types in ZEth.xt",
+		"/Users/tadhgriordan/Documents/Programming/things to do now.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/.gitignore",
+		"/Users/tadhgriordan/Desktop/apartment checklist.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/bigint.sol",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum-zmixer/params.sol",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum/solidity/test/ExecutionFramework.h",
+		"/Users/tadhgriordan/Desktop/kate-cover-letter.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum/cpp-ethereum/libdevcore/RLP.h",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/ethereum/cpp-ethereum/test/tools/libtesteth/BlockChainHelper.h",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/libzerocoin/SpendMetaData.h",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/libzerocoin/SpendMetaData.cpp",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/serialize.h",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/libzerocoin/Params.cpp",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/git-build/zcoin/src/libzerocoin/Commitment.h",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/libzerocoin/SerialNumberSignatureOfKnowledge.cpp",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/libzerocoin/Commitment.cpp",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/libzerocoin/AccumulatorProofOfKnowledge.cpp",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/libzerocoin/CoinSpend.cpp",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/libzerocoin/Coin.cpp",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/git-build/zcoin/src/libzerocoin/Commitment.cpp",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/libzerocoin/Commitment.h",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/libzerocoin/Accumulator.h",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/libzerocoin/Accumulator.cpp",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/libzerocoin/Zerocoin.h",
+		"/Users/tadhgriordan/Desktop/mult.py",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/libzerocoin/bitcoin_bignum/bignum.h",
+		"/Users/tadhgriordan/Documents/kate jobs.txt",
+		"/Users/tadhgriordan/Documents/upcoming crypto news.txt",
+		"/Users/tadhgriordan/Desktop/apartments.cpp",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/libzerocoin/Tutorial.cpp",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/libzerocoin/ParamGeneration.cpp",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/git-build/zcoin/src/libzerocoin/Params.cpp",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/libzerocoin/Params.h",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/libzerocoin/CoinSpend.h",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/zcoin-core_upgrade/src/libzerocoin/ParamGeneration.h",
+		"/Users/tadhgriordan/Documents/usdt on ledger.txt",
+		"/Users/tadhgriordan/Desktop/BILLS.TXT",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/git-build/zcoin/src/libzerocoin/CoinSpend.cpp",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/wolfram_functions.txt",
+		"/Users/tadhgriordan/Documents/Work/Crypto sentiment engine/TODO.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/TODO.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/hacky c shit/fp_reciprocal.c",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/hacky c shit/reciprical.c",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/TADHG/bio.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/git-build/zcoin/src/bignum.h",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/git-build/zcoin/src/libzerocoin/Params.h",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/git-build/zcoin/src/libzerocoin/CoinSpend.h",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/git-build/zcoin/src/libzerocoin/AccumulatorProofOfKnowledge.cpp",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/git-build/zcoin/src/libzerocoin/SerialNumberSignatureOfKnowledge.h",
+		"/Users/tadhgriordan/Desktop/fp_reciprocal.c",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/git-build/zcoin/src/libzerocoin/SerialNumberSignatureOfKnowledge.cpp",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/multiplicative_inverse.txt",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/bdiv.c",
+		"/Users/tadhgriordan/Desktop/newdiv.c",
+		"/Users/tadhgriordan/Documents/Work/Zcoin/TADHG/Solidity - general notes.txt"
+	],
+	"find":
+	{
+		"height": 39.0
+	},
+	"find_in_files":
+	{
+		"height": 101.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 25.0
+	},
+	"input":
+	{
+		"height": 37.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"output.sftp":
+	{
+		"height": 46.0
+	},
+	"pinned_build_system": "",
+	"project": "solidity-BigNumber.sublime-project",
+	"replace":
+	{
+		"height": 46.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"auxpo",
+				"git-build/zcoin/src/auxpow.h"
+			],
+			[
+				"aux",
+				"git-build/zcoin/src/auxpow.cpp"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"",
+				"~/Downloads/openssl-1.0.2n/openssl.sublime-workspace"
+			]
+		],
+		"width": 380.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 225.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
