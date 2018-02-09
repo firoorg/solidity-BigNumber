@@ -1,0 +1,31 @@
+{
+  "name": "solidity-BigNumber",
+  "version": "1.0.0",
+  "description": "BigNumber calculation & verification tool for Solidity.",
+  "private": true,
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zcoinofficial/solidity-BigNumber.git"
+  },
+  "author": "zcoinofficial",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zcoinofficial/solidity-BigNumber/issues"
+  },
+  "homepage": "https://github.com/zcoinofficial/solidity-BigNumber#readme",
+  "dependencies": {
+    "bn.js": "^4.11.8",
+    "crypto": "^1.0.1",
+    "ethereumjs-tx": "^1.3.3",
+    "truffle": "^4.0.4",
+    "web3": "^1.0.0-beta.27",
+    "brorand": "^1.1.0",
+    "big-integer": "^1.6.26"
+  }
+}
