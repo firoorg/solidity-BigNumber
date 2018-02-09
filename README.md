@@ -83,9 +83,5 @@ I usually use Remix (Offline dev mode) for the debugger, hooked up to a local te
 
 Any proposed extensions, improvements, issue discoveries etc. are more than encouraged!
 
-## Reference
-
-TBD
-
 
 
