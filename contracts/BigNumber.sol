@@ -1,10 +1,13 @@
 pragma solidity ^0.4.19;
 
 library BigNumber {
-      
-    // BigNumber is defined as a struct named 'instance' to avoid naming conflicts.
-    // DO NOT ALLOW INSTANTIATING THIS DIRECTLY - use the '_new' functions defined below.
-    // Hoping in future Solidity will allow visibility modifiers on structs..
+    
+    /*
+     * BigNumber is defined as a struct named 'instance' to avoid naming conflicts.
+     * DO NOT ALLOW INSTANTIATING THIS DIRECTLY - use the '_new' functions defined below.
+     * Hoping in future Solidity will allow visibility modifiers on structs..
+     */
+
     struct instance { 
         bytes val;
         bool neg;
@@ -281,7 +284,7 @@ library BigNumber {
 
             //the following code removes any leading words containing all zeroes in the result.
             result_ptr := add(result_ptr,0x20)                                                 
-            for { } eq ( eq(mload(result_ptr), 0), 1) { result_ptr := add(result_ptr,0x20) } { //for(result_ptr+=32;; result==0; result_ptr+=32)
+            for { }   eq(mload(result_ptr), 0) { result_ptr := add(result_ptr,0x20) } { //for(result_ptr+=32;; result==0; result_ptr+=32)
                result_start := add(result_start, 0x20)                                         // push up the start pointer for the result..
                max_len := sub(max_len,0x20)                                                    // and subtract a word (32 bytes) from the result length.
             } 
@@ -684,7 +687,7 @@ library BigNumber {
         assembly{
             //the following code removes any leading words containing all zeroes in the result.
             result_ptr := add(result_ptr,0x20)
-            for { } eq ( eq(mload(result_ptr), 0), 1) { } {
+            for { }  eq(mload(result_ptr), 0) { } {
                result_ptr := add(result_ptr, 0x20) //push up the start pointer for the result..
                length  := sub(length,0x20) //and subtract a word (32 bytes) from the result length.
             }
@@ -720,34 +723,34 @@ library BigNumber {
       * returns: uint y.
       */
   function get_word_length(uint x) internal pure returns (uint y){
-       uint arg = x;
-       assembly {
-            x := sub(x,1)
-            x := or(x, div(x, 0x02))
-            x := or(x, div(x, 0x04))
-            x := or(x, div(x, 0x10))
-            x := or(x, div(x, 0x100))
-            x := or(x, div(x, 0x10000))
-            x := or(x, div(x, 0x100000000))
-            x := or(x, div(x, 0x10000000000000000))
-            x := or(x, div(x, 0x100000000000000000000000000000000))
-            x := add(x, 1)
-            let m := mload(0x40)
-            mstore(m,           0xf8f9cbfae6cc78fbefe7cdc3a1793dfcf4f0e8bbd8cec470b6a28a7a5a3e1efd)
-            mstore(add(m,0x20), 0xf5ecf1b3e9debc68e1d9cfabc5997135bfb7a7a3938b7b606b5b4b3f2f1f0ffe)
-            mstore(add(m,0x40), 0xf6e4ed9ff2d6b458eadcdf97bd91692de2d4da8fd2d0ac50c6ae9a8272523616)
-            mstore(add(m,0x60), 0xc8c0b887b0a8a4489c948c7f847c6125746c645c544c444038302820181008ff)
-            mstore(add(m,0x80), 0xf7cae577eec2a03cf3bad76fb589591debb2dd67e0aa9834bea6925f6a4a2e0e)
-            mstore(add(m,0xa0), 0xe39ed557db96902cd38ed14fad815115c786af479b7e83247363534337271707)
-            mstore(add(m,0xc0), 0xc976c13bb96e881cb166a933a55e490d9d56952b8d4e801485467d2362422606)
-            mstore(add(m,0xe0), 0x753a6d1b65325d0c552a4d1345224105391a310b29122104190a110309020100)
-            mstore(0x40, add(m, 0x100))
-            let magic := 0x818283848586878898a8b8c8d8e8f929395969799a9b9d9e9faaeb6bedeeff
-            let shift := 0x100000000000000000000000000000000000000000000000000000000000000
-            let a := div(mul(x, magic), shift)
-            y := div(mload(add(m,sub(255,a))), shift)
-            y := add(y, mul(256, gt(arg, 0x8000000000000000000000000000000000000000000000000000000000000000)))
-        }  
-        if(arg & arg-1 == 0 && x!=0) ++y; //where x is a power of two, result needs to be incremented. we use the power of two trick here
+      uint arg = x;
+      assembly {
+          x := sub(x,1)
+          x := or(x, div(x, 0x02))
+          x := or(x, div(x, 0x04))
+          x := or(x, div(x, 0x10))
+          x := or(x, div(x, 0x100))
+          x := or(x, div(x, 0x10000))
+          x := or(x, div(x, 0x100000000))
+          x := or(x, div(x, 0x10000000000000000))
+          x := or(x, div(x, 0x100000000000000000000000000000000))
+          x := add(x, 1)
+          let m := mload(0x40)
+          mstore(m,           0xf8f9cbfae6cc78fbefe7cdc3a1793dfcf4f0e8bbd8cec470b6a28a7a5a3e1efd)
+          mstore(add(m,0x20), 0xf5ecf1b3e9debc68e1d9cfabc5997135bfb7a7a3938b7b606b5b4b3f2f1f0ffe)
+          mstore(add(m,0x40), 0xf6e4ed9ff2d6b458eadcdf97bd91692de2d4da8fd2d0ac50c6ae9a8272523616)
+          mstore(add(m,0x60), 0xc8c0b887b0a8a4489c948c7f847c6125746c645c544c444038302820181008ff)
+          mstore(add(m,0x80), 0xf7cae577eec2a03cf3bad76fb589591debb2dd67e0aa9834bea6925f6a4a2e0e)
+          mstore(add(m,0xa0), 0xe39ed557db96902cd38ed14fad815115c786af479b7e83247363534337271707)
+          mstore(add(m,0xc0), 0xc976c13bb96e881cb166a933a55e490d9d56952b8d4e801485467d2362422606)
+          mstore(add(m,0xe0), 0x753a6d1b65325d0c552a4d1345224105391a310b29122104190a110309020100)
+          mstore(0x40, add(m, 0x100))
+          let magic := 0x818283848586878898a8b8c8d8e8f929395969799a9b9d9e9faaeb6bedeeff
+          let shift := 0x100000000000000000000000000000000000000000000000000000000000000
+          let a := div(mul(x, magic), shift)
+          y := div(mload(add(m,sub(255,a))), shift)
+          y := add(y, mul(256, gt(arg, 0x8000000000000000000000000000000000000000000000000000000000000000)))
+      }  
+      if(arg & arg-1 == 0 && x!=0) ++y; //where x is a power of two, result needs to be incremented. we use the power of two trick here
     }
 }
