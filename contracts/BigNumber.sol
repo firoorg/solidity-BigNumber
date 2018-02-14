@@ -17,14 +17,30 @@ library BigNumber {
     /** @dev _new: Create a new Bignumber instance.
       *            overloading allows caller to obtionally pass bitlen where it is known - as it is cheaper to do off-chain and verify on-chain. 
       *            we assert input is in data structure as defined above, and that bitlen, if passed, is correct.
-      * parameter: bytes val - bignum value
+      *            'copy' parameter indicates whether or not to copy the contents of val to a new location in memory (for example where you pass the contents of another variable's value in)
+      * parameter: bytes val - bignum value.
       * parameter: bool  neg - sign of value
       * parameter: uint bitlen - bit length of value
       * returns: instance r.
       */
-    function _new(bytes val, bool neg) internal pure returns(instance r){ 
+    function _new(bytes val, bool neg, bool copy) internal view returns(instance r){ 
         require(val.length % 32 == 0);
-        r.val = val;
+        if(!copy) {
+          r.val = val;
+        }
+        else {
+          // use identity at location 0x4 for cheap memcpy.
+          // grab contents of val, load starting from memory end, update memory end pointer.
+          bytes memory val_copy;
+          assembly{
+            let size := add(mload(val),0x20)
+            let new_loc := mload(0x40)
+            let success := staticcall(450, 0x4, val, size, new_loc, size) // (gas, address, in, insize, out, outsize)
+            val_copy := new_loc //new bytes value
+            mstore(0x40, add(new_loc,size)) //update freemem pointer
+          }
+          r.val = val_copy;
+        }
         r.neg = neg;
         r.bitlen = get_bit_length(val);
     }
@@ -505,22 +521,24 @@ library BigNumber {
             
             // arg[3] = base.bits @ + 96
             // Use identity built-in (contract 0x4) as a cheap memcpy
-            let success := call(450, 0x4, 0, add(_base,32), bl, add(freemem,96), bl)
+            let success := staticcall(450, 0x4, add(_base,32), bl, add(freemem,96), bl)
             
             // arg[4] = exp.bits @ +96+base.length
             let size := add(96, bl)
-            success := call(450, 0x4, 0, add(_exp,32), el, add(freemem,size), el)
+            success := staticcall(450, 0x4, add(_exp,32), el, add(freemem,size), el)
             
             // arg[5] = mod.bits @ +96+base.length+exp.length
             size := add(size,el)
-            success := call(450, 0x4, 0, add(_mod,32), ml, add(freemem,size), ml)
+            success := staticcall(450, 0x4, add(_mod,32), ml, add(freemem,size), ml)
             
             switch success case 0 { invalid() } //fail where we haven't enough gas to make the call
 
             // Total size of input = 96+base.length+exp.length+mod.length
             size := add(size,ml)
             // Invoke contract 0x5, put return value right after mod.length, @ +96
-            success := call(sub(gas, 1350), 0x5, 0, freemem, size, add(96,freemem), ml)
+            success := staticcall(sub(gas, 1350), 0x5, freemem, size, add(96,freemem), ml)
+
+            switch success case 0 { invalid() } //fail where we haven't enough gas to make the call
 
             let length := ml
             let length_ptr := add(96,freemem)
@@ -645,9 +663,129 @@ library BigNumber {
         return 0; //same value.
     }
 
-    function is_prime(instance dividend) internal pure returns(bool) {
-      //TODO
-    }    
+
+    //*************** begin is_prime functions **********************************
+
+    //
+    //TODO generalize for any size input - currently just works for 850-1300 bit primes
+
+    /** @dev is_prime: executes Miller-Rabin Primality Test to see whether input instance is prime or not.
+      *                'randomness' is expected to be provided 
+      *                TODO: 1. add Oraclize randomness generation code template to be added to calling contract.
+      *                      2. generalize for any size input (ie. make constant size randomness array dynamic in some way).
+      *           
+      * parameter: instance a
+      * parameter: instance[] randomness
+      * returns: bool indicating primality.
+      */
+    function is_prime(instance a, instance[3] randomness) internal returns (bool){
+        instance memory  zero = instance(hex"0000000000000000000000000000000000000000000000000000000000000000",false,0); 
+        instance memory   one = instance(hex"0000000000000000000000000000000000000000000000000000000000000001",false,1); 
+        instance memory   two = instance(hex"0000000000000000000000000000000000000000000000000000000000000002",false,2); 
+
+        if (cmp(a, one, true) != 1){ 
+            return false;
+        } // if value is <= 1
+                    
+        // first look for small factors
+        if (is_odd(a)==0) {
+            return (cmp(a, two,true)==0); // if a is even: a is prime if and only if a == 2
+        }
+                 
+        instance memory a1 = prepare_sub(a,one);
+
+        if(cmp(a1,zero,true)==0) return false;
+        
+        uint k = get_k(a1);
+        instance memory a1_odd = _new(a1.val, a1.neg, true); 
+        a1_odd = right_shift(a1_odd, k);
+
+        int j;
+        uint num_checks = prime_checks_for_size(a.bitlen);
+        instance memory check;
+        for (uint i = 0; i < num_checks; i++) {
+            
+            check = prepare_add(randomness[i], one);   
+            // now 1 <= check < a.
+
+            j = witness(check, a, a1, a1_odd, k);
+
+            if(j==-1 || j==1) return false;
+                
+        }
+
+        //if we've got to here, a is likely a prime.
+        return true;
+    }
+
+    function get_k(instance a1) private returns (uint k){
+        k = 0;
+        uint mask=1;
+        uint a1_ptr;
+        uint val;
+        assembly{ 
+            a1_ptr := add(mload(a1),mload(mload(a1))) // get address of least significant portion of a
+            val := mload(a1_ptr)  //load it
+        }
+        
+        //loop from least signifcant bits until we hit a set bit. increment k until this point.        
+        for(bool bit_set = ((val & mask) != 0); !bit_set; bit_set = ((val & mask) != 0)){
+            
+            if(((k+1) % 256) == 0){ //get next word should k reach 256.
+                a1_ptr -= 32;
+                assembly {val := mload(a1_ptr)}
+                mask = 1;
+            }
+            
+            mask*=2; // set next bit (left shift)
+            k++;     // increment k
+        }
+    } 
+
+    function prime_checks_for_size(uint bit_size) private returns(uint checks){
+
+       checks = bit_size >= 1300 ?  2 :
+                bit_size >=  850 ?  3 :
+                bit_size >=  650 ?  4 :
+                bit_size >=  550 ?  5 :
+                bit_size >=  450 ?  6 :
+                bit_size >=  400 ?  7 :
+                bit_size >=  350 ?  8 :
+                bit_size >=  300 ?  9 :
+                bit_size >=  250 ? 12 :
+                bit_size >=  200 ? 15 :
+                bit_size >=  150 ? 18 :
+                /* b >= 100 */ 27;
+    }
+
+    
+    function witness(instance w, instance a, instance a1, instance a1_odd, uint k) internal returns (int){
+        // returns -  0: likely prime, 1: composite number (definite non-prime).
+        instance memory one = instance(hex"0000000000000000000000000000000000000000000000000000000000000001",false,1); 
+        instance memory two = instance(hex"0000000000000000000000000000000000000000000000000000000000000002",false,2); 
+
+        w = prepare_modexp(w, a1_odd, a); // w := w^a1_odd mod a
+
+        if (cmp(w,one,true)==0) return 0; // probably prime.                
+                           
+        if (cmp(w, a1,true)==0) return 0; // w == -1 (mod a), 'a' is probably prime
+                                 
+         for (;k != 0; k=k-1) {
+             w = prepare_modexp(w,two,a); // w := w^2 mod a
+
+             if (cmp(w,one,true)==0) return 1; // // 'a' is composite, otherwise a previous 'w' would have been == -1 (mod 'a')
+                                    
+             if (cmp(w, a1,true)==0) return 0; // w == -1 (mod a), 'a' is probably prime
+                      
+         }
+        /*
+         * If we get here, 'w' is the (a-1)/2-th power of the original 'w', and
+         * it is neither -1 nor +1 -- so 'a' cannot be prime
+         */
+        return 1;
+    }
+
+    // ******************************** end is_prime functions ************************************   
 
     /** @dev right_shift: right shift instance 'dividend' by 'value' bits.
       *           
@@ -753,4 +891,7 @@ library BigNumber {
       }  
       if(arg & arg-1 == 0 && x!=0) ++y; //where x is a power of two, result needs to be incremented. we use the power of two trick here
     }
+
 }
+
+

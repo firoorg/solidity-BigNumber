@@ -63,9 +63,41 @@ contract MockBigNumber {
   }
 
   //stack too deep error when passing in 9 distinct variables as arguments where 3 bignums are expected.
-  //instead we encode each bitlen/neg value in a bytes array and decode.
- function mock_is_prime(bytes prime_val, uint prime_bitlen, bytes randomness_vals, uint count_randomness) public returns(string){ 
-    //TODO
+  //instead we encode each msb/neg value in a bytes array and decode.
+ function mock_is_prime(bytes prime_val, uint prime_msb, bytes randomness_vals, uint count_randomness) public returns(bool){ 
+
+      BigNumber.instance memory prime;
+      BigNumber.instance[3] memory randomness;
+
+      prime.val = prime_val;
+      prime.bitlen = prime_msb;
+      prime.neg = false;
+
+      //now decode randomness vals into count_randomness chucks.
+      uint randomness_ptr;
+      assembly {randomness_ptr := add(randomness_vals,0x20) } //start of randomness vals
+
+      uint randomness_length_base = randomness_vals.length/count_randomness;
+      uint offset = (0x20 - ((randomness_length%0x20)==0 ? 0x20 : (randomness_length%0x20)));
+      uint randomness_length = randomness_length_base + offset;
+
+      bytes memory val;
+      for(uint i=0;i<count_randomness;i++){
+        assembly { 
+          val := mload(0x40)
+          let success := call(450, 0x4, 0, randomness_ptr, randomness_length_base, add(add(val,0x20), offset), randomness_length_base) //copy to new mem location.       
+          mstore(val, randomness_length_base) //store length of chunk.
+          mstore(0x40, add(add(val,0x20),randomness_length)) //deref mem pointer.
+          randomness_ptr :=add(randomness_ptr,randomness_length_base)
+        }
+        randomness[i].val = val; //assign val to randomness.
+        randomness[i].bitlen = BigNumber.get_bit_length(val); 
+        randomness[i].neg = false;
+      }
+
+      bool res = BigNumber.is_prime(prime, randomness);
+      result_bool(res);
+      return res;
   }
 
   //stack too deep error when passing in 9 distinct variables as arguments where 3 bignums are expected.
