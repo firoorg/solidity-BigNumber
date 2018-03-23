@@ -1,4 +1,4 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.20;
 
 library BigNumber {
     
@@ -841,6 +841,21 @@ library BigNumber {
 
     function left_shift(instance a) internal pure returns(uint) {
       //TODO
+    }
+
+
+    /** @dev hash: sha3 hash a BigNumber instance.
+      *            we hash each instance WITHOUT it's first word - first word is a pointer to the start of the bytes value,
+      *            and so is different for each struct.
+      *             
+      * parameter: instance a
+      * returns: bytes32 hash.
+      */
+    function hash(instance a) internal pure returns(bytes32 _hash) {
+        //amount of words to hash = all words of the value and three extra words: neg, bitlen & value length.     
+        assembly {
+            _hash := sha3( add(a,0x20), add (mload(mload(a)), 0x60 ) ) 
+        }
     }
 
     /** @dev get_bit_length: get the bit length of an instance value input.
