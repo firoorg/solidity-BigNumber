@@ -1,4 +1,4 @@
-pragma solidity ^0.4.20;
+pragma solidity >=0.4.20 <0.6;
 
 library BigNumber {
     
@@ -23,7 +23,7 @@ library BigNumber {
       * parameter: uint bitlen - bit length of value
       * returns: instance r.
       */
-    function _new(bytes val, bool neg, bool copy) internal view returns(instance r){ 
+    function _new(bytes memory val, bool neg, bool copy) internal view returns(instance memory r){ 
         require(val.length % 32 == 0);
         if(!copy) {
           r.val = val;
@@ -52,7 +52,7 @@ library BigNumber {
       * parameter: uint bitlen - bit length of value
       * returns: instance r.
       */
-    function _new(bytes val, bool neg, uint bitlen) internal pure returns(instance r){
+    function _new(bytes memory val, bool neg, uint bitlen) internal pure returns(instance memory r){
         uint val_msword; 
         assembly {val_msword := mload(add(val,0x20))} //get msword of result
         require((val.length % 32 == 0) && (val_msword>>(bitlen%256)==1));
@@ -69,7 +69,7 @@ library BigNumber {
       * parameter: instance b - second instance
       * returns: instance r - addition of a & b.
       */
-    function prepare_add(instance a, instance b) internal returns(instance r) {
+    function prepare_add(instance memory a, instance memory b) internal pure returns(instance memory r) {
         instance memory zero = instance(hex"0000000000000000000000000000000000000000000000000000000000000000",false,0); 
         if(a.bitlen==0 && b.bitlen==0) return zero;
         if(a.bitlen==0) return b;
@@ -122,7 +122,7 @@ library BigNumber {
       * returns: bytes result - max + min.
       * returns: uint - bit length of result.
       */
-    function bn_add(bytes max, bytes min, uint max_bitlen) private pure returns (bytes memory, uint) {
+    function bn_add(bytes memory max, bytes memory min, uint max_bitlen) private pure returns (bytes memory, uint) {
         bytes memory result;
         assembly {
 
@@ -197,7 +197,7 @@ library BigNumber {
       * returns: instance r - a-b.
       */  
 
-    function prepare_sub(instance a, instance b) internal returns(instance r) {
+    function prepare_sub(instance memory a, instance memory b) internal pure returns(instance memory r) {
         instance memory zero = instance(hex"0000000000000000000000000000000000000000000000000000000000000000",false,0); 
         bytes memory val;
         int compare;
@@ -252,7 +252,7 @@ library BigNumber {
       * returns: bytes result - max + min.
       * returns: uint - bit length of result.
       */
-   function bn_sub(bytes max, bytes min) private pure returns (bytes memory, uint) {
+   function bn_sub(bytes memory max, bytes memory min) private pure returns (bytes memory, uint) {
         bytes memory result;
         uint carry = 0;
         assembly {
@@ -328,7 +328,7 @@ library BigNumber {
       * parameter: instance b 
       * returns: bytes res - a*b.
       */
-    function bn_mul(instance a, instance b) internal returns(instance res){
+    function bn_mul(instance memory a, instance memory b) internal view returns(instance memory res){
 
         
         res = op_and_square(a,b,0);                                // add_and_square = (a+b)^2
@@ -355,7 +355,7 @@ library BigNumber {
       * parameter: int op 
       * returns: bytes res - (a'op'b) ^ 2.
       */
-    function op_and_square(instance a, instance b, int op) private returns(instance res){
+    function op_and_square(instance memory a, instance memory b, int op) private view returns(instance memory res){
         instance memory two = instance(hex"0000000000000000000000000000000000000000000000000000000000000002",false,2);        
         
         uint mod_index = 0;
@@ -405,7 +405,7 @@ library BigNumber {
       * parameter: instance result
       * returns: 'result' param. 
       */
-    function bn_div(instance a, instance b, instance result) internal returns(instance){
+    function bn_div(instance memory a, instance memory b, instance memory result) internal view returns(instance memory){
 
 
         if(a.neg==true || b.neg==true){ //first handle sign.
@@ -419,7 +419,7 @@ library BigNumber {
 
         if(cmp(result,zero,true)==0){                //if result is 0:
             if(cmp(a,b,true)==-1) return result;     // return zero if a<b (numerator < denominator)
-            else throw;                              // else fail.
+            else assert(false);                      // else fail.
         }      
 
         instance memory fst = bn_mul(b,result); // do multiplication (b * result)
@@ -434,7 +434,7 @@ library BigNumber {
     }
 
 
-    function bn_mod(instance a, instance mod) internal view returns(instance res){
+    function bn_mod(instance memory a, instance memory mod) internal view returns(instance memory res){
       instance memory one = instance(hex"0000000000000000000000000000000000000000000000000000000000000001",false,1);
       res = prepare_modexp(a,one,mod);
     }
@@ -448,7 +448,7 @@ library BigNumber {
       * parameter: instance modulus
       * returns: instance result.
       */    
-    function prepare_modexp(instance base, instance exponent, instance modulus) internal view returns(instance result) {
+    function prepare_modexp(instance memory base, instance memory exponent, instance memory modulus) internal view returns(instance memory result) {
         require(exponent.neg==false); //if exponent is negative, other method with this same name should be used.
 
         bytes memory _result = modexp(base.val,exponent.val,modulus.val);
@@ -474,7 +474,7 @@ library BigNumber {
       * parameter: instance modulus
       * returns: instance result.
       */ 
-     function prepare_modexp(instance base, instance base_inverse, instance exponent, instance modulus) internal view returns(instance result) {
+     function prepare_modexp(instance memory base, instance memory base_inverse, instance memory exponent, instance memory modulus) internal view returns(instance memory result) {
         // base^-exp = (base^-1)^exp
         require(exponent.neg==true);
 
@@ -572,7 +572,7 @@ library BigNumber {
       * parameter: instance modulus
       * returns: instance res.
       */
-    function modmul(instance a, instance b, instance modulus) internal view returns(instance res){       
+    function modmul(instance memory a, instance memory b, instance memory modulus) internal view returns(instance memory res){       
         res = bn_mod(bn_mul(a,b),modulus);       
     }
 
@@ -585,7 +585,7 @@ library BigNumber {
       * parameter: instance user_result
       * returns: instance user_result.
       */
-    function mod_inverse(instance base, instance modulus, instance user_result) internal view returns(instance){
+    function mod_inverse(instance memory base, instance memory modulus, instance memory user_result) internal view returns(instance memory){
         require(base.neg==false && modulus.neg==false); //assert positivity of inputs.
             
         /*
@@ -606,7 +606,7 @@ library BigNumber {
       * parameter: instance _in
       * returns: uint ret.
       */  
-    function is_odd(instance _in) internal pure returns(uint ret){
+    function is_odd(instance memory _in) internal pure returns(uint ret){
         assembly{
             let in_ptr := add(mload(_in), mload(mload(_in))) //go to least significant word
             ret := mod(mload(in_ptr),2)                      //..and mod it with 2. 
@@ -626,7 +626,7 @@ library BigNumber {
       * parameter: bool signed
       * returns: int.
       */
-    function cmp(instance a, instance b, bool signed) internal pure returns(int){
+    function cmp(instance memory a, instance memory b, bool signed) internal pure returns(int){
         int trigger = 1;
         if(signed){
             if(a.neg && b.neg) trigger = -1;
@@ -678,7 +678,7 @@ library BigNumber {
       * parameter: instance[] randomness
       * returns: bool indicating primality.
       */
-    function is_prime(instance a, instance[3] randomness) internal returns (bool){
+    function is_prime(instance memory a, instance[3] memory randomness) internal view returns (bool){
         instance memory  zero = instance(hex"0000000000000000000000000000000000000000000000000000000000000000",false,0); 
         instance memory   one = instance(hex"0000000000000000000000000000000000000000000000000000000000000001",false,1); 
         instance memory   two = instance(hex"0000000000000000000000000000000000000000000000000000000000000002",false,2); 
@@ -718,7 +718,7 @@ library BigNumber {
         return true;
     }
 
-    function get_k(instance a1) private returns (uint k){
+    function get_k(instance memory a1) private pure returns (uint k){
         k = 0;
         uint mask=1;
         uint a1_ptr;
@@ -742,7 +742,7 @@ library BigNumber {
         }
     } 
 
-    function prime_checks_for_size(uint bit_size) private returns(uint checks){
+    function prime_checks_for_size(uint bit_size) private pure returns(uint checks){
 
        checks = bit_size >= 1300 ?  2 :
                 bit_size >=  850 ?  3 :
@@ -759,7 +759,7 @@ library BigNumber {
     }
 
     
-    function witness(instance w, instance a, instance a1, instance a1_odd, uint k) internal returns (int){
+    function witness(instance memory w, instance memory a, instance memory a1, instance memory a1_odd, uint k) internal view returns (int){
         // returns -  0: likely prime, 1: composite number (definite non-prime).
         instance memory one = instance(hex"0000000000000000000000000000000000000000000000000000000000000001",false,1); 
         instance memory two = instance(hex"0000000000000000000000000000000000000000000000000000000000000002",false,2); 
@@ -794,7 +794,7 @@ library BigNumber {
       * parameter: bool signed
       * returns: int.
       */
-    function right_shift(instance dividend, uint value) internal pure returns(instance){
+    function right_shift(instance memory dividend, uint value) internal pure returns(instance memory){
         //TODO use memcpy for cheap rightshift where input is multiple of 8 (byte size)
         bytes memory result;
         uint word_shifted;
@@ -839,7 +839,7 @@ library BigNumber {
         return dividend;
     }
 
-    function left_shift(instance a) internal pure returns(uint) {
+    function left_shift(instance memory a) internal pure returns(uint) {
       //TODO
     }
 
@@ -851,10 +851,10 @@ library BigNumber {
       * parameter: instance a
       * returns: bytes32 hash.
       */
-    function hash(instance a) internal pure returns(bytes32 _hash) {
+    function hash(instance memory a) internal pure returns(bytes32 _hash) {
         //amount of words to hash = all words of the value and three extra words: neg, bitlen & value length.     
         assembly {
-            _hash := sha3( add(a,0x20), add (mload(mload(a)), 0x60 ) ) 
+            _hash := keccak256( add(a,0x20), add (mload(mload(a)), 0x60 ) ) 
         }
     }
 
@@ -863,7 +863,7 @@ library BigNumber {
       * parameter: bytes a
       * returns: uint res.
       */
-    function get_bit_length(bytes val) internal pure returns(uint res){
+    function get_bit_length(bytes memory val) internal pure returns(uint res){
         uint msword; 
         assembly {msword := mload(add(val,0x20))}          //get msword of result
         res = get_word_length(msword) + (val.length-32)*8; //get bitlen pf msword, add to size of remaining words.
