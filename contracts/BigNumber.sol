@@ -536,7 +536,7 @@ library BigNumber {
             // Total size of input = 96+base.length+exp.length+mod.length
             size := add(size,ml)
             // Invoke contract 0x5, put return value right after mod.length, @ +96
-            success := staticcall(sub(gas, 1350), 0x5, freemem, size, add(96,freemem), ml)
+            success := staticcall(sub(gas(), 1350), 0x5, freemem, size, add(96,freemem), ml)
 
             switch success case 0 { invalid() } //fail where we haven't enough gas to make the call
 
