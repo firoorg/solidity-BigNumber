@@ -1,5 +1,6 @@
 cache/
 notes/
 out/
+test/differential/scripts/differential.js
 test/differential/scripts/node_modules
 test/differential/scripts/package-lock.json
