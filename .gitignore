@@ -1,5 +1,5 @@
-solidity-BigNumber.sublime-project
-solidity-BigNumber.sublime-workspace
-.DS_Store
-build/
-node_modules/
+cache/
+notes/
+out/
+test/differential/scripts/node_modules
+test/differential/scripts/package-lock.json
