@@ -6,6 +6,19 @@ import "../src/BigNumbers.sol";
 
 contract BigNumbersTest is Test, IBigNumbers {
     using BigNumbers for *;
+    bytes constant ZERO = hex"0000000000000000000000000000000000000000000000000000000000000000";
+    bytes constant  ONE = hex"0000000000000000000000000000000000000000000000000000000000000001";
+    bytes constant  TWO = hex"0000000000000000000000000000000000000000000000000000000000000002";
+
+    function testDiv() public {
+        bytes memory _a = hex"0000";
+        bytes memory _b = hex"2c44bc4694d72d924e1832fbcdbb66bf8a0fd54399212d71f7e5ffda57c22bd6f0a3fa4313a6c2c21115d6abbe16e1ba84ffdeaf6d707c4f98070bbe8f2fc35b7921e2e1897515444cb64e1dc7cf38f38f90ca4ae732fc832c34528d6d2d01562c7b71";
+        BigNumber memory a = _a.init(false);
+        BigNumber memory b = _b.init(true);
+        BigNumber memory res = BigNumber(ZERO,false,0); 
+
+        a.div(b, res);
+    }
 
     function testInit() public {
         bytes memory val;
@@ -33,7 +46,7 @@ contract BigNumbersTest is Test, IBigNumbers {
         assertEq(bn.bitlen,  256);
     }
 
-    function testVerify() public {
+    function testVerify() public pure {
         BigNumber memory bn = BigNumber({
             val: hex"00000000000000000000000000000000000000000000bccc69e47d98498430b725f7ff5af5be936fb1ccde3fdcda3b0882a9082eab761e75b34da18d8923d70b481d89e2e936eecec248b3d456b580900a18bcd39b3948bc956139367b89dde7",
             neg: false,
@@ -42,7 +55,7 @@ contract BigNumbersTest is Test, IBigNumbers {
         bn.verify();
     }
 
-    function testFailVerifyBitlen() public {
+    function testFailVerifyBitlen() public pure {
         BigNumber memory bn = BigNumber({
             val: hex"00000000000000000000000000000000000000000000bccc69e47d98498430b725f7ff5af5be936fb1ccde3fdcda3b0882a9082eab761e75b34da18d8923d70b481d89e2e936eecec248b3d456b580900a18bcd39b3948bc956139367b89dde7",
             neg: false,
@@ -51,7 +64,7 @@ contract BigNumbersTest is Test, IBigNumbers {
         bn.verify();
     }
 
-    function testFailVerifyLength() public {
+    function testFailVerifyLength() public pure {
         BigNumber memory bn = BigNumber({
             val: hex"000000000000000000000000000000000000000000bccc69e47d98498430b725f7ff5af5be936fb1ccde3fdcda3b0882a9082eab761e75b34da18d8923d70b481d89e2e936eecec248b3d456b580900a18bcd39b3948bc956139367b89dde7",
             neg: false,
