@@ -9,17 +9,7 @@ contract BigNumbersTest is Test, IBigNumbers {
     bytes constant ZERO = hex"0000000000000000000000000000000000000000000000000000000000000000";
     bytes constant  ONE = hex"0000000000000000000000000000000000000000000000000000000000000001";
     bytes constant  TWO = hex"0000000000000000000000000000000000000000000000000000000000000002";
-
-    function testDiv() public {
-        bytes memory _a = hex"0000";
-        bytes memory _b = hex"2c44bc4694d72d924e1832fbcdbb66bf8a0fd54399212d71f7e5ffda57c22bd6f0a3fa4313a6c2c21115d6abbe16e1ba84ffdeaf6d707c4f98070bbe8f2fc35b7921e2e1897515444cb64e1dc7cf38f38f90ca4ae732fc832c34528d6d2d01562c7b71";
-        BigNumber memory a = _a.init(false);
-        BigNumber memory b = _b.init(true);
-        BigNumber memory res = BigNumber(ZERO,false,0); 
-
-        a.div(b, res);
-    }
-
+    
     function testInit() public {
         bytes memory val;
         BigNumber memory bn;
@@ -143,6 +133,11 @@ contract BigNumbersTest is Test, IBigNumbers {
         assertEq(r.val.length, 0x20);
         assertEq(r.bitlen, 255); 
         assertEq(r.neg, true); 
+
+        r = ((hex'ffff').init(false)).shr(192);
+        assertEq(r.val.length, 0x20);
+        assertEq(r.bitlen, 0); 
+        assertEq(r.neg, false); 
     }
 
     function testShiftLeft() public {
@@ -227,4 +222,15 @@ contract BigNumbersTest is Test, IBigNumbers {
         assertEq(r.bitlen, 520);
         assertEq(r.neg, false); 
     }
+
+    function testDiv() public pure {
+        bytes memory _a = hex"0000";
+        bytes memory _b = hex"2c44bc4694d72d924e1832fbcdbb66bf8a0fd54399212d71f7e5ffda57c22bd6f0a3fa4313a6c2c21115d6abbe16e1ba84ffdeaf6d707c4f98070bbe8f2fc35b7921e2e1897515444cb64e1dc7cf38f38f90ca4ae732fc832c34528d6d2d01562c7b71";
+        BigNumber memory a = _a.init(false);
+        BigNumber memory b = _b.init(true);
+        BigNumber memory res = BigNumber(ZERO,false,0); 
+
+        a.div(b, res);
+    }
+
 }

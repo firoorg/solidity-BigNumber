@@ -166,13 +166,16 @@ contract BigNumbersDifferentialTest is Test, IBigNumbers {
         assertEq(js_res.val, res.val);
     }
 
-    function testShlMatchesJSImplementationFuzzed(bytes memory a_val, bool a_neg, uint bits) public {
+    function testShlMatchesJSImplementationFuzzed(bytes memory a_val, uint bits) public {
         vm.assume(a_val.length > 1 && bits <= 2048);
         
-        BigNumber memory a = a_val.init(a_neg);
+        BigNumber memory a = a_val.init(false);
         BigNumber memory res = a.shl(bits);
 
-        string[] memory runJsInputs = new string[](10);
+        console.log('res out:');
+        console.logBytes(res.val);
+
+        string[] memory runJsInputs = new string[](9);
 
         // build ffi command string
         runJsInputs[0]  = 'npm';
@@ -183,8 +186,7 @@ contract BigNumbersDifferentialTest is Test, IBigNumbers {
         runJsInputs[5]  = 'differential';
         runJsInputs[6]  = 'shl';
         runJsInputs[7]  = a_val.toHexString();
-        runJsInputs[8]  = a_neg.toString();
-        runJsInputs[9] = bits.toString();
+        runJsInputs[8] = bits.toString();
 
         // run and captures output
         bytes memory jsResult = vm.ffi(runJsInputs);
@@ -194,13 +196,13 @@ contract BigNumbersDifferentialTest is Test, IBigNumbers {
         assertEq(js_res.cmp(res, true), 0);
     }
 
-    function testShrMatchesJSImplementationFuzzed(bytes memory a_val, bool a_neg, uint bits) public {
-        vm.assume(a_val.length > 1);
+    function testShrMatchesJSImplementationFuzzed(bytes memory a_val, uint bits) public {
+        vm.assume(a_val.length > 1 && bits <= 2048);
         
-        BigNumber memory a = a_val.init(a_neg);
+        BigNumber memory a = a_val.init(false);
         BigNumber memory res = a.shr(bits);
 
-        string[] memory runJsInputs = new string[](10);
+        string[] memory runJsInputs = new string[](9);
 
         // build ffi command string
         runJsInputs[0]  = 'npm';
@@ -211,8 +213,7 @@ contract BigNumbersDifferentialTest is Test, IBigNumbers {
         runJsInputs[5]  = 'differential';
         runJsInputs[6]  = 'shr';
         runJsInputs[7]  = a_val.toHexString();
-        runJsInputs[8]  = a_neg.toString();
-        runJsInputs[9] = bits.toString();
+        runJsInputs[8] = bits.toString();
 
         // run and captures output
         bytes memory jsResult = vm.ffi(runJsInputs);

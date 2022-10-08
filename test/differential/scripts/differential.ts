@@ -77,25 +77,19 @@ switch(func){
     }
     case "shl": {
         const a_val = process.argv[3];
-        const a_neg = (process.argv[4] === 'true');
-        const bits = Number(process.argv[5]);
+        const bits = Number(process.argv[4]);
         let a = ethers.BigNumber.from(a_val);
-        if(a_neg) a = a.mul(-1);
         let res = a.shl(bits)
         const neg = res.isNegative()
-        if(neg) res = res.mul(-1)
         process.stdout.write(ethers.utils.defaultAbiCoder.encode(['bool', 'bytes'], [neg, res]));
         break;
     }
     case "shr": {
         const a_val = process.argv[3];
-        const a_neg = (process.argv[4] === 'true');
-        const bits = Number(process.argv[5]);
+        const bits = Number(process.argv[4]);
         let a = ethers.BigNumber.from(a_val);
-        if(a_neg) a = a.mul(-1);
         let res = a.shr(bits)
         const neg = res.isNegative()
-        if(neg) res = res.mul(-1)
         process.stdout.write(ethers.utils.defaultAbiCoder.encode(['bool', 'bytes'], [neg, res]));
         break;
     }

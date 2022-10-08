@@ -849,13 +849,13 @@ library BigNumbers {
       * @return r result
       */
     function _shr(IBigNumbers.BigNumber memory bn, uint bits) internal view returns(IBigNumbers.BigNumber memory){
-
+        require(!bn.neg, "negative-width");
         //uint length = bn.val.length;
         uint length;
         assembly { length := mload(mload(bn)) }
 
         // if bits is >= the bitlength of the value the result is always 0
-        if(bits >= length * 8) return IBigNumbers.BigNumber(ZERO,false,0); 
+        if(bits >= bn.bitlen) return IBigNumbers.BigNumber(ZERO,false,0); 
         
         // set bitlen initially as we will be potentially modifying 'bits'
         bn.bitlen = bn.bitlen-(bits);
@@ -916,6 +916,7 @@ library BigNumbers {
     }
 
     function shl(IBigNumbers.BigNumber memory bn, uint bits) internal view returns(IBigNumbers.BigNumber memory r) {
+        require(!bn.neg, "negative-width");
         
         // we start by creating an empty bytes array of the size of the output, based on 'bits'.
         // TODO cleanup this mess.
@@ -946,10 +947,11 @@ library BigNumbers {
         if(bits % 8 == 0) {
             // calculate the position of the first byte in the result.
             uint bytes_pos = ((256-(((bn.bitlen-1)+bits) % 256))-1) / 8;
+            uint insize = (bn.bitlen / 8) + ((bn.bitlen % 8 != 0) ? 1 : 0);
             assembly {
               let in          := add(add(mload(bn), 0x20), div(sub(256, bitlen_mod), 8))
               let out         := add(bn_shift_ptr, bytes_pos)
-              let success     := staticcall(450, 0x4, in, length, out, length)
+              let success     := staticcall(450, 0x4, in, insize, out, length)
             }
             r.val = bn_shift;
             return r;
