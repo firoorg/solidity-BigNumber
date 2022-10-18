@@ -1,6 +1,8 @@
+// TODO change back to pure from view
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.16;
 import "./interfaces/IBigNumbers.sol";
+import "forge-std/console.sol";
 
 library BigNumbers {
 
@@ -12,7 +14,8 @@ library BigNumbers {
         uint val_msword; 
         bytes memory val = bn.val;
         assembly {val_msword := mload(add(val,0x20))} //get msword of result
-        require((bn.val.length % 32 == 0) && (val_msword>>((bn.bitlen%256)-1)==1));
+        if(val_msword==0) require(isZero(bn));
+        else require((bn.val.length % 32 == 0) && (val_msword>>((bn.bitlen%256)-1)==1));
     }
 
     /** @dev init: Create a new BigNumber.
@@ -28,6 +31,7 @@ library BigNumbers {
     function _init(bytes memory val, bool neg, uint bitlen) internal view returns(IBigNumbers.BigNumber memory r){ 
         // use identity at location 0x4 for cheap memcpy.
         // grab contents of val, load starting from memory end, update memory end pointer.
+
         assembly {
             let data := add(val, 0x20)
             let length := mload(val)
@@ -45,11 +49,22 @@ library BigNumbers {
                 }
             pop(staticcall(450, 0x4, data, length, out, length))  // copy into 'out' memory location
             mstore(0x40, add(freemem, add(mload(freemem), 0x20))) // update the free memory pointer
+            
+            // handle leading zero words. assume freemem is pointer to bytes value
+            let bn_length := mload(freemem)
+            for { } eq ( eq(bn_length, 0x20), 0) { } {              // for(; length!=32; length-=32)
+             switch eq(mload(add(freemem, 0x20)),0)              // if(msword==0):
+                    case 1 { freemem := add(freemem, 0x20) }        //     update length pointer
+                    default { break }                               // else: loop termination. non-zero word found
+                bn_length := sub(bn_length,0x20)                          
+            } 
+            mstore(freemem, bn_length)                             
+
             mstore(r, freemem)                                    // store new bytes value in r
             mstore(add(r, 0x20), neg)                             // store neg value in r
         }
 
-        r.bitlen = bitlen == 0 ? get_bit_length(r.val) : bitlen;
+        r.bitlen = bitlen == 0 ? _bitLength(r.val) : bitlen;
     }
 
     function init(bytes memory val, bool neg, uint bitlen) internal view returns(IBigNumbers.BigNumber memory){
@@ -175,7 +190,7 @@ library BigNumbers {
 
             /* we now calculate the result's bit length.
              * with addition, if we assume that some a is at least equal to some b, then the resulting bit length will be a's bit length or (a's bit length)+1, depending on carry bit.
-             * this is cheaper than calling get_bit_length.
+             * this is cheaper than calling _bitLength.
              */
             let msword := mload(add(result,0x20))                             // calculate get most significant word of result
             if or( eq(msword, 1), eq(shr(mod(max_bitlen,256),msword),1) ) { // if(msword==1 || msword>>(max_bitlen % 256)==1):
@@ -198,13 +213,19 @@ library BigNumbers {
       * returns: IBigNumbers.BigNumber memory r - a-b.
       */  
 
-    function sub(IBigNumbers.BigNumber memory a, IBigNumbers.BigNumber memory b) internal pure returns(IBigNumbers.BigNumber memory r) {
+    function sub(IBigNumbers.BigNumber memory a, IBigNumbers.BigNumber memory b) internal view returns(IBigNumbers.BigNumber memory r) {
+        //console.log('start of sub');
+        //console.logBytes(b.val);
+        //console.logBytes(a.val);
         IBigNumbers.BigNumber memory zero = IBigNumbers.BigNumber(ZERO,false,0); 
         if(a.bitlen==0 && b.bitlen==0) return zero;
         bytes memory val;
         int compare;
         uint bitlen;
         compare = cmp(a,b,false);
+        //console.log('again in sub');
+        //console.logBytes(b.val);
+        //console.logBytes(a.val);
         if(a.neg || b.neg) {
             if(a.neg && b.neg){           
                 if(compare == 1) { 
@@ -231,12 +252,18 @@ library BigNumbers {
                 r.neg = false;
              }
             else if(compare == -1) { 
+                //console.log('sub, a<b');
+                //console.logBytes(b.val);
+                //console.logBytes(a.val);
                 (val,bitlen) = _sub(b.val,a.val);
+                //console.logBytes(val);
                 r.neg = true;
             }
             else return zero; 
         }
-
+        
+        //console.log('sub val:');
+        //console.logBytes(val);
         r.val = val;
         r.bitlen = (bitlen);
     }
@@ -254,11 +281,10 @@ library BigNumbers {
       * returns: bytes result - max + min.
       * returns: uint - bit length of result.
       */
-    function _sub(bytes memory max, bytes memory min) private pure returns (bytes memory, uint) {
+    function _sub(bytes memory max, bytes memory min) internal pure returns (bytes memory, uint) {
         bytes memory result;
         uint carry = 0;
         uint uint_max = type(uint256).max;
-        unchecked {
         assembly {
                 
             let result_start := msize()                                         // Get the highest available block of memory
@@ -314,9 +340,8 @@ library BigNumbers {
             
             mstore(0x40, memory_end)                                                    // Update freemem pointer.
         }
-        }
 
-        uint new_bitlen = get_bit_length(result);                                       // calculate the result's bit length.
+        uint new_bitlen = _bitLength(result);                                       // calculate the result's bit length.
         
         return (result, new_bitlen);
     }
@@ -332,15 +357,17 @@ library BigNumbers {
       * returns: bytes res - a*b.
       */
     function mul(IBigNumbers.BigNumber memory a, IBigNumbers.BigNumber memory b) internal view returns(IBigNumbers.BigNumber memory res){
-
-        res = op_and_square(a,b,0);                                             // add_and_square = (a+b)^2
-
-        //no need to do subtraction part of the equation if a == b; if so, it has no effect on final result.
-        if(cmp(a,b,true)!=0){  
-            IBigNumbers.BigNumber memory sub_and_square = op_and_square(a,b,1); // sub_and_square = (a-b)^2
-            res = sub(res,sub_and_square);                              // res = add_and_square - sub_and_square
+            
+        IBigNumbers.BigNumber memory fst = op_and_square(a,b,0); // (a+b)^2
+        
+        // no need to do subtraction part of the equation if a == b; if so, it has no effect on final result.
+        if(!eq(a,b)) {
+            IBigNumbers.BigNumber memory snd = op_and_square(a,b,1); // (a-b)^2
+            res = _shr(sub(fst, snd) , 2); // (a * b) = (((a + b)**2 - (a - b)**2) / 4
         }
-        _shr(res, 2);                                              // res = res / 4
+        else {
+            res = _shr(fst , 2); // a==b ? (((a + b)**2 / 4
+        }
      }
 
 
@@ -362,10 +389,12 @@ library BigNumbers {
         bytes memory _modulus;
         
         res = (op == 0) ? add(a,b) : sub(a,b); //op == 0: add, op == 1: sub.
+
         uint res_bitlen = res.bitlen;
         assembly { mod_index := mul(res_bitlen,2) }
         first_word_modulus = uint(1) << ((mod_index % 256)); //set bit in first modulus word.
         
+        // TODO pow function which generalizes this.
         //we pass the minimum modulus value which would return JUST the squaring part of the calculation; therefore the value may be many words long.
         //This is done by:
         //  - storing total modulus byte length
@@ -424,6 +453,13 @@ library BigNumbers {
         
         // require denominator to not be zero.
         require(!(cmp(b,zero,true)==0));
+        
+        // division result check assumes inputs are positive.
+        // we have already checked for result sign so this is safe.
+        bool[3] memory negs = [a.neg, b.neg, result.neg];
+        a.neg = false;
+        b.neg = false;
+        result.neg = false;
 
         // do multiplication (b * result)
         IBigNumbers.BigNumber memory fst = mul(b,result);
@@ -434,6 +470,10 @@ library BigNumbers {
         IBigNumbers.BigNumber memory snd = modexp(a,one,fst); 
         // ((b*result) + a % (b*result)) == a
         require(cmp(add(fst,snd),a,true)==0); 
+
+        a.neg = negs[0];
+        b.neg = negs[1];
+        result.neg = negs[2];
     }
 
 
@@ -458,19 +498,22 @@ library BigNumbers {
     internal view returns(IBigNumbers.BigNumber memory result) {
         //if exponent is negative, other method with this same name should be used.
         //if modulus is negative, we cannot perform the operation.
-        require(  exponent.neg==false 
-                && modulus.neg==false); 
+        require(  exponent.neg==false
+                && modulus.neg==false);
 
         bytes memory _result = _modexp(base.val,exponent.val,modulus.val);
         //get bitlen of result (TODO: optimise. we know bitlen is in the same byte as the modulus bitlen byte)
-        uint bitlen;
-        assembly { bitlen := mload(add(_result,0x20))}
-        bitlen = get_word_length(bitlen) + (((_result.length/32)-1)*256);
+        uint bitlen = _bitLength(_result);
         
         // result assuming base is positive.
         result = IBigNumbers.BigNumber(_result, false, bitlen);
-        // if base is negative, result value is abs(result-modulus).
-        if(base.neg) { 
+
+        // if result is 0, the following block is not used.
+        if(bitlen == 0) return result;
+
+        // if base is negative and exponent is odd, base^exp is negative.
+        // so in that case result value is abs(result-modulus).
+        if(base.neg && is_odd(exponent)) { 
             result = sub(result, modulus);
             result.neg = false;
         }
@@ -504,12 +547,13 @@ library BigNumbers {
         //get bitlen of result (TODO: optimise. we know bitlen is in the same byte as the modulus bitlen byte)
         uint bitlen;
         assembly { bitlen := mload(add(_result,0x20))}
-        bitlen = get_word_length(bitlen) + (((_result.length/32)-1)*256); 
+        bitlen = wordLength(bitlen) + (((_result.length/32)-1)*256); 
 
         // result assuming base is positive.
         result = IBigNumbers.BigNumber(_result, false, bitlen);
-        // if base is negative, result value is abs(result-modulus).
-        if(base.neg) { 
+        // if base is negative and exponent is odd, base^exp is negative.
+        // so in that case result value is abs(result-modulus).
+        if(base.neg && is_odd(exponent)) { 
             result = sub(result, modulus);
             result.neg = false;
         }
@@ -558,21 +602,22 @@ library BigNumbers {
             // Total size of input = 96+base.length+exp.length+mod.length
             size := add(size,ml)
             // Invoke contract 0x5, put return value right after mod.length, @ +96
-            success := staticcall(sub(gas(), 1350), 0x5, freemem, size, add(96,freemem), ml)
+            success := staticcall(sub(gas(), 1350), 0x5, freemem, size, add(freemem, 0x60), ml)
 
             switch success case 0 { invalid() } //fail where we haven't enough gas to make the call
 
             let length := ml
-            let length_ptr := add(96,freemem)
+            let msword_ptr := add(freemem, 0x60)
 
             ///the following code removes any leading words containing all zeroes in the result.
             //start_ptr := add(start_ptr,0x20)
-            for { } eq ( eq(mload(length_ptr), 0), 1) { } {
-               length_ptr := add(length_ptr, 0x20)        //push up the start pointer for the result..
-               length := sub(length,0x20) //and subtract a word (32 bytes) from the result length.
+            for { } eq ( eq(length, 0x20), 0) { } {                   // for(; length!=32; length-=32)
+                switch eq(mload(msword_ptr),0)                        // if(msword==0):
+                    case 1 { msword_ptr := add(msword_ptr, 0x20) }    //     update length pointer
+                    default { break }                                 // else: loop termination. non-zero word found
+                length := sub(length,0x20)                          
             } 
-
-            ret := sub(length_ptr,0x20)
+            ret := sub(msword_ptr,0x20)
             mstore(ret, length)
             
             // point to the location of the return value (length, bits)
@@ -583,8 +628,7 @@ library BigNumbers {
             mstore(0x40, add(add(96, freemem),ml)) //deallocate freemem pointer
         }        
     }
-
-
+    
     /** @dev modmul: Takes BigNumbers for a, b, and modulus, and computes (a*b) % modulus
       *              We call mul for the two input values, before calling modexp, passing exponent as 1.
       *              Sign is taken care of in sub-functions.
@@ -628,10 +672,10 @@ library BigNumbers {
       * parameter: IBigNumbers.BigNumber memory _in
       * returns: uint ret.
       */  
-    function is_odd(IBigNumbers.BigNumber memory _in) internal pure returns(uint ret){
+    function is_odd(IBigNumbers.BigNumber memory _in) internal view returns(bool ret){
         assembly{
-            let in_ptr := add(mload(_in), mload(mload(_in))) //go to least significant word
-            ret := mod(mload(in_ptr),2)                      //..and mod it with 2. 
+            let in_ptr := add(mload(_in), mload(mload(_in))) // go to least significant word
+            ret := mod(mload(in_ptr),2)                      // mod it with 2 (gives 0 or 1) 
         }
     }
 
@@ -687,6 +731,11 @@ library BigNumbers {
         return 0; //same value.
     }
 
+    function eq(IBigNumbers.BigNumber memory a, IBigNumbers.BigNumber memory b) internal pure returns(bool){
+        int result = cmp(a, b, true);
+        return (result==0) ? true : false;
+    }
+
     function gt(IBigNumbers.BigNumber memory a, IBigNumbers.BigNumber memory b) internal pure returns(bool){
         int result = cmp(a, b, true);
         return (result==1) ? true : false;
@@ -732,7 +781,7 @@ library BigNumbers {
         } // if value is <= 1
                     
         // first look for small factors
-        if (is_odd(a)==0) {
+        if (!is_odd(a)) {
             return (cmp(a, two,true)==0); // if a is even: a is prime if and only if a == 2
         }
                  
@@ -849,7 +898,7 @@ library BigNumbers {
       * @return r result
       */
     function _shr(IBigNumbers.BigNumber memory bn, uint bits) internal view returns(IBigNumbers.BigNumber memory){
-        require(!bn.neg, "negative-width");
+        //require(!bn.neg, "negative-width"); TODO some failure with mul. figure out why.
         //uint length = bn.val.length;
         uint length;
         assembly { length := mload(mload(bn)) }
@@ -877,12 +926,13 @@ library BigNumbers {
               case 1 {  
                   let bytes_shift := div(bits, 8)
                   let in          := mload(bn)
-                  let insize      := mload(in)
+                  let inlength    := mload(in)
+                  let insize      := add(inlength, 0x20)
                   let out         := add(in,     bytes_shift)
                   let outsize     := sub(insize, bytes_shift)
-                  let success     := staticcall(450, 0x4, in, insize, out, outsize)
+                  let success     := staticcall(450, 0x4, in, insize, out, insize)
                   mstore8(add(out, 0x1f), 0) // maintain our BN layout following identity call:
-                  mstore(in, insize)         // set current length byte to 0, and reset old length. TODO maybe can swap bytes here
+                  mstore(in, inlength)         // set current length byte to 0, and reset old length. TODO maybe can swap bytes here
               }
               default {
                   let mask
@@ -916,14 +966,18 @@ library BigNumbers {
     }
 
     function shl(IBigNumbers.BigNumber memory bn, uint bits) internal view returns(IBigNumbers.BigNumber memory r) {
-        require(!bn.neg, "negative-width");
+        //require(!bn.neg, "negative-width"); TODO move to master function
+        if(bits==0 || bn.bitlen==0) return bn;
         
         // we start by creating an empty bytes array of the size of the output, based on 'bits'.
-        // TODO cleanup this mess.
+        // for that we must get the amount of extra words needed for the output.
         uint length = bn.val.length;
-        uint bitlen_mod = bn.bitlen % 256;
-        uint extra_words = ((bits / 256) + (bits % 256 >= (256 - ( bitlen_mod )) ? 1 : 0)) * 0x20; 
-        uint total_words = extra_words + length;
+        // position of bitlen in most significnat word
+        uint bit_position = ((bn.bitlen-1) % 256) + 1;
+        // total extra words. we check if the bits remainder will add one more word.
+        uint extra_words = (bits / 256) + ( (bits % 256) >= (256 - bit_position) ? 1 : 0);
+        // length of output
+        uint total_length = length + (extra_words * 0x20);
 
         r.bitlen = bn.bitlen+(bits);
         r.neg = bn.neg;
@@ -932,15 +986,15 @@ library BigNumbers {
         
         bytes memory bn_shift;
         uint bn_shift_ptr;
-        // the following efficiently creates an empty byte array of size 'total_words'
+        // the following efficiently creates an empty byte array of size 'total_length'
         assembly {
-            let freemem_ptr := mload(0x40)               // get pointer to free memory
-            mstore(freemem_ptr, total_words)             // store bytes length
-            let mem_end := add(freemem_ptr, total_words) // end of memory
-            mstore(mem_end, 0)                           // store 0 at memory end
-            bn_shift := freemem_ptr                      // set pointer to bytes
-            bn_shift_ptr := add(bn_shift, 0x20)          // get bn_shift pointer
-            mstore(0x40, add(mem_end, 0x20))             // update freemem pointer
+            let freemem_ptr := mload(0x40)                // get pointer to free memory
+            mstore(freemem_ptr, total_length)             // store bytes length
+            let mem_end := add(freemem_ptr, total_length) // end of memory
+            mstore(mem_end, 0)                            // store 0 at memory end
+            bn_shift := freemem_ptr                       // set pointer to bytes
+            bn_shift_ptr := add(bn_shift, 0x20)           // get bn_shift pointer
+            mstore(0x40, add(mem_end, 0x20))              // update freemem pointer
         }
 
         // use identity for cheap copy if bits is multiple of 8.
@@ -949,7 +1003,7 @@ library BigNumbers {
             uint bytes_pos = ((256-(((bn.bitlen-1)+bits) % 256))-1) / 8;
             uint insize = (bn.bitlen / 8) + ((bn.bitlen % 8 != 0) ? 1 : 0);
             assembly {
-              let in          := add(add(mload(bn), 0x20), div(sub(256, bitlen_mod), 8))
+              let in          := add(add(mload(bn), 0x20), div(sub(256, bit_position), 8))
               let out         := add(bn_shift_ptr, bytes_pos)
               let success     := staticcall(450, 0x4, in, insize, out, length)
             }
@@ -970,7 +1024,7 @@ library BigNumbers {
        // handle first word before loop if the shift adds any extra words.
        // the loop would handle it if the bit shift doesn't wrap into the next word, 
        // so we check only for that condition.
-       if((bitlen_mod+bits) > 256){
+       if((bit_position+bits) > 256){
            assembly {
               msw := mload(msw_ptr)
               mstore(bn_shift_ptr, shr(mask_shift, msw))
@@ -1011,29 +1065,58 @@ library BigNumbers {
         }
     }
 
-    /** @dev get_bit_length: get the bit length of an IBigNumbers.BigNumber memory value input.
+    function isZero(IBigNumbers.BigNumber memory a) internal pure returns(bool) {
+        return _isZero(a.val) && a.val.length==0x20 && !a.neg && a.bitlen == 0;
+    }
+
+    function _isZero(bytes memory val) internal pure returns(bool) {
+        uint msword;
+        uint msword_ptr;
+        assembly {
+            msword_ptr := add(val,0x20)
+        }
+        for(uint i=0; i<val.length; i+=32) {
+            assembly { msword := mload(msword_ptr) } // get msword of input
+            if(msword > 0) return false;
+            assembly { msword_ptr := add(msword_ptr, 0x20) }
+        }
+        return true;
+
+    }
+
+    /** @dev bitLength: get the bit length of an IBigNumbers.BigNumber memory value input.
       *           
       * parameter: bytes a
       * returns: uint res.
       */
-    function get_bit_length(bytes memory val) internal pure returns(uint res){
+    function bitLength(IBigNumbers.BigNumber memory bn) internal pure returns(uint res){
+        return _bitLength(bn.val);
+    }
+
+    /** @dev _bitLength: get the bit length of an IBigNumbers.BigNumber memory value input.
+      *           
+      * parameter: bytes a
+      * returns: uint res.
+      */
+    function _bitLength(bytes memory val) private pure returns(uint res){
+        if(_isZero(val)) return 0;
         uint msword; 
         assembly {
             msword := mload(add(val,0x20))                   // get msword of input
-        }                  
-        res = get_word_length(msword);                       // get bitlen of msword, add to size of remaining words.
+        }
+        res = wordLength(msword);                       // get bitlen of msword, add to size of remaining words.
         assembly {                                           
             res := add(res, mul(sub(mload(val), 0x20) , 8))  // res += (val.length-32)*8;  
         }
     }
 
-    /** @dev get_word_length: get the word length of a uint input - ie. log2_256 (most significant bit of 256 bit value (one EVM word))
+    /** @dev wordLength: get the word length of a uint input - ie. log2_256 (most significant bit of 256 bit value (one EVM word))
       *                       credit: Tjaden Hess @ ethereum.stackexchange             
       *           
       * parameter: uint x
       * returns: uint y.
       */
-  function get_word_length(uint x) internal pure returns (uint y){
+  function wordLength(uint x) internal pure returns (uint y){
       assembly {
           switch eq(x, 0)
           case 1 {
@@ -1073,4 +1156,5 @@ library BigNumbers {
          }  
     }
   }
+
 }

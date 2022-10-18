@@ -4,6 +4,6 @@ out = 'out'
 libs = ['lib']
 
 [fuzz]
-runs = 100
+runs = 10000
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
