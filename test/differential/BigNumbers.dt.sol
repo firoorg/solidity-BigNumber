@@ -260,4 +260,56 @@ contract BigNumbersDifferentialTest is Test, IBigNumbers {
 
         assertEq(js_res, res);
     }
+
+    // write a test case for modmul, modexp, and modinv
+
+    function testModMulMatchesJSImplementationFuzzed(bytes memory a_val, bytes memory b_val, bytes memory n_val, bool a_neg, bool b_neg) public {
+        vm.assume(a_val.length > 1 && b_val.length > 1 && n_val.length > 1);
+        
+        BigNumber memory a = a_val.init(a_neg);
+        BigNumber memory b = b_val.init(b_neg);
+        BigNumber memory n = n_val.init(false);
+        BigNumber memory res = a.modmul(b, n);
+        if(res.isZero()) res.neg = false;
+
+        string[] memory runJsInputs = new string[](12);
+
+        // build ffi command string
+        runJsInputs[0]  = 'npm';
+        runJsInputs[1]  = '--prefix';
+        runJsInputs[2]  = 'test/differential/scripts/';
+        runJsInputs[3]  = '--silent';
+        runJsInputs[4]  = 'run';
+        runJsInputs[5]  = 'differential';
+        runJsInputs[6]  = 'modmul';
+        runJsInputs[7]  = a_val.toHexString();
+        runJsInputs[8]  = b_val.toHexString();
+        runJsInputs[9]  = n_val.toHexString();
+        runJsInputs[10] = a_neg.toString();
+        runJsInputs[11] = b_neg.toString();
+
+        // run and captures output
+        bytes memory jsResult = vm.ffi(runJsInputs);
+        (bool neg, bytes memory js_res_val ) = abi.decode(jsResult, (bool, bytes));
+        BigNumber memory js_res = js_res_val.init(neg);
+
+        assertEq(js_res.eq(res), true);
+    }
+
+    // write a test case for divmod
+
+    // write a test case for div
+
+    // write a test case for mulmod
+
+    // write a test case for powmod
+
+    // write a test case for exp
+
+    // write a test case for invmod
+
+    // write a test case for inv
+
+    // write a test case for sqrt
+
 }

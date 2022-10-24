@@ -282,7 +282,7 @@ contract BigNumbersTest is Test, IBigNumbers {
         bytes memory _a = hex"0000000000000000000000000000000000000000000000000000000000000010";
         bytes memory _b = hex"0000000000000000000000000000000000000000000000000000000000000001";
 
-        (bytes memory res, uint bitlen) = _a._sub(_b);
+        (bytes memory res, ) = _a._sub(_b);
 
         console.log('res:');
         console.logBytes(res);
@@ -295,8 +295,8 @@ contract BigNumbersTest is Test, IBigNumbers {
     }
 
     function testMod() public {
-        bytes memory _a = hex"26ac";
-        bytes memory _b = hex"14";
+        bytes memory _a = hex"01";
+        bytes memory _b = hex"02";
 
         BigNumber memory a = _a.init(true);
         BigNumber memory b = _b.init(false);
@@ -335,7 +335,7 @@ contract BigNumbersTest is Test, IBigNumbers {
         bytes memory _a = hex"800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
         //bytes memory _b = hex"0018";
         BigNumber memory a = _a.init(false);
-        BigNumber memory res = a.shl(1);
+        BigNumber memory res = a.shr(72);
 
         console.log('res.val:');
         console.logBytes(res.val);
@@ -343,4 +343,23 @@ contract BigNumbersTest is Test, IBigNumbers {
         console.logBool(res.neg);
 
     }
+
+    // write a function to test modmul in BigNumbers
+
+// write a test case for modmul using the following arguments: [0x0000, 0x0000, 0x0000, false, false, false]] 
+    //function testModMul() public {
+    //    bytes memory _a = hex"0000";
+    //    bytes memory _b = hex"0000";
+    //    bytes memory _c = hex"0000";
+    //    BigNumber memory a = _a.init(false);
+    //    BigNumber memory b = _b.init(false);
+    //    BigNumber memory c = _c.init(false);
+    //    BigNumber memory res = a.modmul(b, c);
+
+    //    console.log('res.val:');
+    //    console.logBytes(res.val);
+    //    console.log('res.neg:');
+    //    console.logBool(res.neg);
+    //}
+
 }

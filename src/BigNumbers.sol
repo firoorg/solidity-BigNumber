@@ -1,8 +1,6 @@
-// TODO change back to pure from view
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.16;
 import "./interfaces/IBigNumbers.sol";
-import "forge-std/console.sol";
 
 library BigNumbers {
 
@@ -84,8 +82,7 @@ library BigNumbers {
       * returns: IBigNumbers.BigNumber memory r - addition of a & b.
       */
     function add(IBigNumbers.BigNumber memory a, IBigNumbers.BigNumber memory b) internal pure returns(IBigNumbers.BigNumber memory r) {
-        IBigNumbers.BigNumber memory zero = IBigNumbers.BigNumber(ZERO,false,0); 
-        if(a.bitlen==0 && b.bitlen==0) return zero;
+        if(a.bitlen==0 && b.bitlen==0) return zero();
         if(a.bitlen==0) return b;
         if(b.bitlen==0) return a;
         bytes memory val;
@@ -107,7 +104,7 @@ library BigNumbers {
                     (val, bitlen) = _sub(b.val,a.val);
                     r.neg = !a.neg;
                 }
-                else return zero;//one pos and one neg, and same value.
+                else return zero();//one pos and one neg, and same value.
             }
         }
         else{
@@ -213,19 +210,12 @@ library BigNumbers {
       * returns: IBigNumbers.BigNumber memory r - a-b.
       */  
 
-    function sub(IBigNumbers.BigNumber memory a, IBigNumbers.BigNumber memory b) internal view returns(IBigNumbers.BigNumber memory r) {
-        //console.log('start of sub');
-        //console.logBytes(b.val);
-        //console.logBytes(a.val);
-        IBigNumbers.BigNumber memory zero = IBigNumbers.BigNumber(ZERO,false,0); 
-        if(a.bitlen==0 && b.bitlen==0) return zero;
+    function sub(IBigNumbers.BigNumber memory a, IBigNumbers.BigNumber memory b) internal pure returns(IBigNumbers.BigNumber memory r) {
+        if(a.bitlen==0 && b.bitlen==0) return zero();
         bytes memory val;
         int compare;
         uint bitlen;
         compare = cmp(a,b,false);
-        //console.log('again in sub');
-        //console.logBytes(b.val);
-        //console.logBytes(a.val);
         if(a.neg || b.neg) {
             if(a.neg && b.neg){           
                 if(compare == 1) { 
@@ -237,7 +227,7 @@ library BigNumbers {
                     (val,bitlen) = _sub(b.val,a.val); 
                     r.neg = false;
                 }
-                else return zero;
+                else return zero();
             }
             else {
                 if(compare >= 0) (val,bitlen) = _add(a.val,b.val,a.bitlen);
@@ -252,18 +242,12 @@ library BigNumbers {
                 r.neg = false;
              }
             else if(compare == -1) { 
-                //console.log('sub, a<b');
-                //console.logBytes(b.val);
-                //console.logBytes(a.val);
                 (val,bitlen) = _sub(b.val,a.val);
-                //console.logBytes(val);
                 r.neg = true;
             }
-            else return zero; 
+            else return zero(); 
         }
         
-        //console.log('sub val:');
-        //console.logBytes(val);
         r.val = val;
         r.bitlen = (bitlen);
     }
@@ -382,7 +366,6 @@ library BigNumbers {
       * returns: bytes res - (a'op'b) ^ 2.
       */
     function op_and_square(IBigNumbers.BigNumber memory a, IBigNumbers.BigNumber memory b, int op) private view returns(IBigNumbers.BigNumber memory res){
-        IBigNumbers.BigNumber memory two = IBigNumbers.BigNumber(TWO,false,2);   
         
         uint mod_index = 0;
         uint first_word_modulus;
@@ -413,7 +396,7 @@ library BigNumbers {
         modulus.neg = false;
         modulus.bitlen = (mod_index);
 
-        res = modexp(res,two,modulus); // ((a 'op' b) ^ 2 % modulus) == (a 'op' b) ^ 2.
+        res = modexp(res,two(),modulus); // ((a 'op' b) ^ 2 % modulus) == (a 'op' b) ^ 2.
     }
 
 
@@ -438,9 +421,8 @@ library BigNumbers {
 
         // first do zero check.
         // if a<b (always zero) and result==zero (input check), return.
-        IBigNumbers.BigNumber memory zero = IBigNumbers.BigNumber(ZERO,false,0);
         if(cmp(a, b, false) == -1){
-            require(cmp(zero, result, false)==0);
+            require(cmp(zero(), result, false)==0);
             return;
         }
 
@@ -452,7 +434,7 @@ library BigNumbers {
         require(positiveResult ? !result.neg : result.neg);
         
         // require denominator to not be zero.
-        require(!(cmp(b,zero,true)==0));
+        require(!(cmp(b,zero(),true)==0));
         
         // division result check assumes inputs are positive.
         // we have already checked for result sign so this is safe.
@@ -465,9 +447,8 @@ library BigNumbers {
         IBigNumbers.BigNumber memory fst = mul(b,result);
         // check if we already have 'a' (ie. no remainder after division). if so, no mod necessary, and return.
         if(cmp(fst,a,true)==0) return;  
-        IBigNumbers.BigNumber memory one = IBigNumbers.BigNumber(ONE,false,1);
         //a mod (b*result)
-        IBigNumbers.BigNumber memory snd = modexp(a,one,fst); 
+        IBigNumbers.BigNumber memory snd = modexp(a,one(),fst); 
         // ((b*result) + a % (b*result)) == a
         require(cmp(add(fst,snd),a,true)==0); 
 
@@ -478,8 +459,7 @@ library BigNumbers {
 
 
     function mod(IBigNumbers.BigNumber memory a, IBigNumbers.BigNumber memory n) internal view returns(IBigNumbers.BigNumber memory res){
-      IBigNumbers.BigNumber memory one = IBigNumbers.BigNumber(ONE,false,1);
-      res = modexp(a,one,n);
+      res = modexp(a,one(),n);
     }
 
 
@@ -495,7 +475,7 @@ library BigNumbers {
         IBigNumbers.BigNumber memory base, 
         IBigNumbers.BigNumber memory exponent, 
         IBigNumbers.BigNumber memory modulus) 
-    internal view returns(IBigNumbers.BigNumber memory result) {
+    internal view returns(IBigNumbers.BigNumber memory) {
         //if exponent is negative, other method with this same name should be used.
         //if modulus is negative, we cannot perform the operation.
         require(  exponent.neg==false
@@ -505,18 +485,13 @@ library BigNumbers {
         //get bitlen of result (TODO: optimise. we know bitlen is in the same byte as the modulus bitlen byte)
         uint bitlen = _bitLength(_result);
         
-        // result assuming base is positive.
-        result = IBigNumbers.BigNumber(_result, false, bitlen);
-
-        // if result is 0, the following block is not used.
-        if(bitlen == 0) return result;
-
-        // if base is negative and exponent is odd, base^exp is negative.
-        // so in that case result value is abs(result-modulus).
-        if(base.neg && is_odd(exponent)) { 
-            result = sub(result, modulus);
-            result.neg = false;
-        }
+        // if result is 0, immediately return.
+        if(bitlen == 0) return zero();
+        // if base is negative AND exponent is odd, base^exp is negative, and tf. result is negative;
+        // in that case we make the result positive by adding the modulus.
+        if(base.neg && is_odd(exponent)) return add(IBigNumbers.BigNumber(_result, true, bitlen), modulus);
+        // in any other case we return the positive result.
+        return IBigNumbers.BigNumber(_result, false, bitlen);
      }
 
     /** @dev modexp: takes base, base inverse, exponent, and modulus, asserts inverse(base)==base inverse, 
@@ -545,18 +520,15 @@ library BigNumbers {
 
         bytes memory _result = _modexp(base_inverse.val,exponent.val,modulus.val);
         //get bitlen of result (TODO: optimise. we know bitlen is in the same byte as the modulus bitlen byte)
-        uint bitlen;
-        assembly { bitlen := mload(add(_result,0x20))}
-        bitlen = wordLength(bitlen) + (((_result.length/32)-1)*256); 
+        uint bitlen = _bitLength(_result);
 
-        // result assuming base is positive.
-        result = IBigNumbers.BigNumber(_result, false, bitlen);
-        // if base is negative and exponent is odd, base^exp is negative.
-        // so in that case result value is abs(result-modulus).
-        if(base.neg && is_odd(exponent)) { 
-            result = sub(result, modulus);
-            result.neg = false;
-        }
+        // result assuming base^exp is negative.
+        result = IBigNumbers.BigNumber(_result, true, bitlen);
+
+        // if base is negative AND exponent is odd, base^exp is negative, and tf. result is negative;
+        // in that case we make the result positive by adding the modulus.
+        if(base.neg && is_odd(exponent)) return add(result, modulus);
+        else result.neg = false;
      }
  
 
@@ -610,7 +582,6 @@ library BigNumbers {
             let msword_ptr := add(freemem, 0x60)
 
             ///the following code removes any leading words containing all zeroes in the result.
-            //start_ptr := add(start_ptr,0x20)
             for { } eq ( eq(length, 0x20), 0) { } {                   // for(; length!=32; length-=32)
                 switch eq(mload(msword_ptr),0)                        // if(msword==0):
                     case 1 { msword_ptr := add(msword_ptr, 0x20) }    //     update length pointer
@@ -623,8 +594,6 @@ library BigNumbers {
             // point to the location of the return value (length, bits)
             //assuming mod length is multiple of 32, return value is already in the right format.
             //function visibility is changed to internal to reflect this.
-            //ret := add(64,freemem) 
-            
             mstore(0x40, add(add(96, freemem),ml)) //deallocate freemem pointer
         }        
     }
@@ -638,8 +607,8 @@ library BigNumbers {
       * parameter: IBigNumbers.BigNumber memory modulus
       * returns: IBigNumbers.BigNumber memory res.
       */
-    function modmul(IBigNumbers.BigNumber memory a, IBigNumbers.BigNumber memory b, IBigNumbers.BigNumber memory modulus) internal view returns(IBigNumbers.BigNumber memory res){       
-        res = mod( mul(a,b), modulus);       
+    function modmul(IBigNumbers.BigNumber memory a, IBigNumbers.BigNumber memory b, IBigNumbers.BigNumber memory modulus) internal view returns(IBigNumbers.BigNumber memory) {       
+        return mod( mul(a,b), modulus);       
     }
 
 
@@ -660,22 +629,21 @@ library BigNumbers {
          * - modular inverse exists for values base and modulus.
          * otherwise it fails.
          */        
-        IBigNumbers.BigNumber memory one = IBigNumbers.BigNumber(ONE,false,1);
-        require(cmp(modmul(base, user_result, modulus),one,true)==0);
+        require(cmp(modmul(base, user_result, modulus),one(),true)==0);
 
         return user_result;
      }
 
 
-    /** @dev is_odd: returns 1 if IBigNumbers.BigNumber memory value is an odd number and 0 otherwise.
+    /** @dev is_odd: returns 1 if BigNumber value is an odd number and 0 otherwise.
       *              
       * parameter: IBigNumbers.BigNumber memory _in
       * returns: uint ret.
       */  
-    function is_odd(IBigNumbers.BigNumber memory _in) internal view returns(bool ret){
+    function is_odd(IBigNumbers.BigNumber memory _in) internal pure returns(bool ret){
         assembly{
             let in_ptr := add(mload(_in), mload(mload(_in))) // go to least significant word
-            ret := mod(mload(in_ptr),2)                      // mod it with 2 (gives 0 or 1) 
+            ret := mod(mload(in_ptr),2)                      // mod it with 2 (returns 0 or 1) 
         }
     }
 
@@ -772,23 +740,23 @@ library BigNumbers {
       * returns: bool indicating primality.
       */
     function is_prime(IBigNumbers.BigNumber memory a, IBigNumbers.BigNumber[3] memory randomness) internal view returns (bool){
-        IBigNumbers.BigNumber memory  zero = IBigNumbers.BigNumber(ZERO,false,0); 
-        IBigNumbers.BigNumber memory   one = IBigNumbers.BigNumber(ONE,false,1); 
-        IBigNumbers.BigNumber memory   two = IBigNumbers.BigNumber(TWO,false,2); 
-
-        if (cmp(a, one, true) != 1){ 
+        
+        int compare = cmp(a,two(),true); 
+        if (compare < 0){
+            // if value is < 2
             return false;
-        } // if value is <= 1
-                    
-        // first look for small factors
+        } 
+        if(compare == 0){
+            // if value is 2
+            return true;
+        }
+        // if a is even and not 2 (checked): return false
         if (!is_odd(a)) {
-            return (cmp(a, two,true)==0); // if a is even: a is prime if and only if a == 2
+            return false; 
         }
                  
-        IBigNumbers.BigNumber memory a1 = sub(a,one);
+        IBigNumbers.BigNumber memory a1 = sub(a,one());
 
-        if(cmp(a1,zero,true)==0) return false;
-        
         uint k = get_k(a1);
         IBigNumbers.BigNumber memory a1_odd = init(a1.val, a1.neg); 
         _shr(a1_odd, k);
@@ -798,7 +766,7 @@ library BigNumbers {
         IBigNumbers.BigNumber memory check;
         for (uint i = 0; i < num_checks; i++) {
             
-            check = add(randomness[i], one);   
+            check = add(randomness[i], one());
             // now 1 <= check < a.
 
             j = witness(check, a, a1, a1_odd, k);
@@ -854,19 +822,17 @@ library BigNumbers {
     
     function witness(IBigNumbers.BigNumber memory w, IBigNumbers.BigNumber memory a, IBigNumbers.BigNumber memory a1, IBigNumbers.BigNumber memory a1_odd, uint k) internal view returns (int){
         // returns -  0: likely prime, 1: composite number (definite non-prime).
-        IBigNumbers.BigNumber memory one = IBigNumbers.BigNumber(ONE,false,1); 
-        IBigNumbers.BigNumber memory two = IBigNumbers.BigNumber(TWO,false,2); 
 
         w = modexp(w, a1_odd, a); // w := w^a1_odd mod a
 
-        if (cmp(w,one,true)==0) return 0; // probably prime.                
+        if (cmp(w,one(),true)==0) return 0; // probably prime.                
                            
         if (cmp(w, a1,true)==0) return 0; // w == -1 (mod a), 'a' is probably prime
                                  
          for (;k != 0; k=k-1) {
-             w = modexp(w,two,a); // w := w^2 mod a
+             w = modexp(w,two(),a); // w := w^2 mod a
 
-             if (cmp(w,one,true)==0) return 1; // // 'a' is composite, otherwise a previous 'w' would have been == -1 (mod 'a')
+             if (cmp(w,one(),true)==0) return 1; // // 'a' is composite, otherwise a previous 'w' would have been == -1 (mod 'a')
                                     
              if (cmp(w, a1,true)==0) return 0; // w == -1 (mod a), 'a' is probably prime
                       
@@ -1155,6 +1121,18 @@ library BigNumbers {
            }
          }  
     }
+  }
+
+  function zero() internal pure returns(IBigNumbers.BigNumber memory) {
+      return IBigNumbers.BigNumber(ZERO, false, 0);
+  }
+
+  function one() internal pure returns(IBigNumbers.BigNumber memory) {
+      return IBigNumbers.BigNumber(ONE, false, 1);
+  }
+
+  function two() internal pure returns(IBigNumbers.BigNumber memory) {
+      return IBigNumbers.BigNumber(TWO, false, 2);
   }
 
 }
