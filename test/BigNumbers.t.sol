@@ -1,10 +1,10 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.16;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 import "../src/BigNumbers.sol";
 
-contract BigNumbersTest is Test, IBigNumbers {
+contract BigNumbersTest is Test {
     using BigNumbers for *;
     bytes constant ZERO = hex"0000000000000000000000000000000000000000000000000000000000000000";
     bytes constant  ONE = hex"0000000000000000000000000000000000000000000000000000000000000001";
@@ -73,11 +73,11 @@ contract BigNumbersTest is Test, IBigNumbers {
         val = hex"f000000000000000000000000000000000000000000000000000000000000000".init(false);
         assertEq(BigNumbers.bitLength(val), 256);
 
-        assertEq(BigNumbers.wordLength(0), 0);
-        assertEq(BigNumbers.wordLength(1), 1);
-        assertEq(BigNumbers.wordLength(1 << 200), 201);
-        assertEq(BigNumbers.wordLength((1 << 200)+1), 201);
-        assertEq(BigNumbers.wordLength(1 << 255), 256);
+        assertEq(BigNumbers.bitLength(0), 0);
+        assertEq(BigNumbers.bitLength(1), 1);
+        assertEq(BigNumbers.bitLength(1 << 200), 201);
+        assertEq(BigNumbers.bitLength((1 << 200)+1), 201);
+        assertEq(BigNumbers.bitLength(1 << 255), 256);
     }
 
     function testShiftRight() public {
@@ -225,15 +225,7 @@ contract BigNumbersTest is Test, IBigNumbers {
         assertEq(r.neg, false); 
     }
 
-    function testDiv() public {
-        //bytes memory _a = hex"0000";
-        //bytes memory _b = hex"2c44bc4694d72d924e1832fbcdbb66bf8a0fd54399212d71f7e5ffda57c22bd6f0a3fa4313a6c2c21115d6abbe16e1ba84ffdeaf6d707c4f98070bbe8f2fc35b7921e2e1897515444cb64e1dc7cf38f38f90ca4ae732fc832c34528d6d2d01562c7b71";
-        //BigNumber memory a = _a.init(false);
-        //BigNumber memory b = _b.init(true);
-        //BigNumber memory res = BigNumber(ZERO,false,0); 
-
-        //a.div(b, res);
-
+    function testDiv() public view {
         bytes memory _a = hex"c44185bd565bf73657762992dd9825b34c44c95f3845fa188bf98d3f36db0b38cdad5a8be77f36baf8467826c4574b2e3cbdc1a4d4b0fc4ff667434a6ac644e7d8349833f80b82e901";
         bytes memory _b = hex"4807722751c4327f377e03";
         bytes memory _res = hex"02b98463de4a24865849566e8398b60d2596843283dbff493f37f0efb8f738cd9f06dedf61a7b6177f41732cfb722c585edab0e6bfcdaf7a0f7df79756732a";
@@ -241,125 +233,21 @@ contract BigNumbersTest is Test, IBigNumbers {
         BigNumber memory b = _b.init(false);
         BigNumber memory res = _res.init(true); 
 
-        a.div(b, res);
+        a.divVerify(b, res);
     }
 
-    function testIsZero() public {
-        //bytes memory _val = hex"000000000000000000000000000000000000000000000000000000000000000000";
-        bytes memory _val = hex"00";
-        
-        bool res = _val._isZero();
-        console.log('res:');
-        console.logBool(res);
-    }
-
-    function testCmp() public {
-        bytes memory _a = hex"000000000000000000000000000000000000000000000000000000000000000000";
-        bytes memory _b = hex"0000";
-
+    function testModMul() public view {
+        bytes memory _a = hex"1f78";
+        bytes memory _b = hex"0309";
+        bytes memory _m = hex"3178";
         BigNumber memory a = _a.init(false);
         BigNumber memory b = _b.init(false);
+        BigNumber memory m = _m.init(false);
+    
+        BigNumber memory res = a.modmul(b, m);
 
-        int res = a.cmp(b, true);
-
-        console.log('a.val:');
-        console.logBytes(a.val);
-        console.log('a.neg:');
-        console.logBool(a.neg);
-        console.log('b.val:');
-        console.logBytes(a.val);
-        console.log('b.neg:');
-        console.logBool(a.neg);
-        console.log('a.bitlen:');
-        console.logUint(a.bitlen);
-        console.log('b.bitlen:');
-        console.logUint(b.bitlen);
-        console.log('res:');
-        console.logInt(res);
-    }
-
-    function testSubIn() public {
-        bytes memory _a = hex"0000000000000000000000000000000000000000000000000000000000000010";
-        bytes memory _b = hex"0000000000000000000000000000000000000000000000000000000000000001";
-
-        (bytes memory res, ) = _a._sub(_b);
-
-        console.log('res:');
-        console.logBytes(res);
-        //console.log('a.neg:');
-        //console.logBool(a.neg);
-        //console.log('res.val:');
-        //console.logBytes(res.val);
-        //console.log('res.neg:');
-        //console.logBool(res.neg);
-    }
-
-    function testMod() public {
-        bytes memory _a = hex"01";
-        bytes memory _b = hex"02";
-
-        BigNumber memory a = _a.init(true);
-        BigNumber memory b = _b.init(false);
-
-        BigNumber memory res = a.mod(b);
-
-        //console.log('a.val:');
-        //console.logBytes(a.val);
-        //console.log('a.neg:');
-        //console.logBool(a.neg);
-        console.log('res.val:');
+        console.log('res out:');
         console.logBytes(res.val);
-        console.log('res.neg:');
         console.logBool(res.neg);
     }
-
-    function testMulUnit() public {
-
- //fails: args=[0x010000000000000100000000000000000000000000000000000000000000000000000000000000201375c1450c68ef6eae, 0xc7afce813e174d509617accfe7d707b12a359c4bacd8de3e95f47f687cad617df49d2c7244ff7fed0f, true, false]] 
- // fails: args=[0x4843400000000000000000000000000000000000000000000000000000000000000000000000, 0x0000, false, false]] 
-        bytes memory _a = hex"0000";
-        bytes memory _b = hex"0001";
-        //bytes memory _b = hex"0018";
-        BigNumber memory a = _a.init(true);
-        BigNumber memory b = _b.init(false);
-        BigNumber memory res = a.mul(b);
-
-        console.log('res.val:');
-        console.logBytes(res.val);
-        console.log('res.neg:');
-        console.logBool(res.neg);
-    }
-
-
-    function testShl() public {
-        bytes memory _a = hex"800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
-        //bytes memory _b = hex"0018";
-        BigNumber memory a = _a.init(false);
-        BigNumber memory res = a.shr(72);
-
-        console.log('res.val:');
-        console.logBytes(res.val);
-        console.log('res.neg:');
-        console.logBool(res.neg);
-
-    }
-
-    // write a function to test modmul in BigNumbers
-
-// write a test case for modmul using the following arguments: [0x0000, 0x0000, 0x0000, false, false, false]] 
-    //function testModMul() public {
-    //    bytes memory _a = hex"0000";
-    //    bytes memory _b = hex"0000";
-    //    bytes memory _c = hex"0000";
-    //    BigNumber memory a = _a.init(false);
-    //    BigNumber memory b = _b.init(false);
-    //    BigNumber memory c = _c.init(false);
-    //    BigNumber memory res = a.modmul(b, c);
-
-    //    console.log('res.val:');
-    //    console.logBytes(res.val);
-    //    console.log('res.neg:');
-    //    console.logBool(res.neg);
-    //}
-
 }

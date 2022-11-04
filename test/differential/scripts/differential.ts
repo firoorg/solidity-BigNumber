@@ -10,11 +10,11 @@ switch(func){
         const b_neg = (process.argv[6] === 'true');
         let a = new BN(a_val, 16)
         let b = new BN(b_val, 16)
-        if(a_neg) a = a.mul(new BN(-1, 16));
-        if(b_neg) b = b.mul(new BN(-1, 16));
+        if(a_neg) a = a.mul(new BN(-1));
+        if(b_neg) b = b.mul(new BN(-1));
         let res = a.add(b)
         const neg = res.isNeg()
-        if(neg) res = res.mul(new BN(-1, 16))
+        if(neg) res = res.abs()
         process.stdout.write(ethers.utils.defaultAbiCoder.encode(['bool', 'bytes'], [neg, ethers.BigNumber.from(res.toString())]));
         break;
     }
@@ -25,11 +25,11 @@ switch(func){
         const b_neg = (process.argv[6] === 'true');
         let a = new BN(a_val, 16)
         let b = new BN(b_val, 16)
-        if(a_neg) a = a.mul(new BN(-1, 16));
-        if(b_neg) b = b.mul(new BN(-1, 16));
+        if(a_neg) a = a.mul(new BN(-1));
+        if(b_neg) b = b.mul(new BN(-1));
         let res = a.sub(b)
         const neg = res.isNeg()
-        if(neg) res = res.mul(new BN(-1, 16))
+        if(neg) res = res.abs()
         process.stdout.write(ethers.utils.defaultAbiCoder.encode(['bool', 'bytes'], [neg, ethers.BigNumber.from(res.toString())]));
         break;
     }
@@ -40,11 +40,11 @@ switch(func){
         const b_neg = (process.argv[6] === 'true');
         let a = new BN(a_val, 16)
         let b = new BN(b_val, 16)
-        if(a_neg) a = a.mul(new BN(-1, 16));
-        if(b_neg) b = b.mul(new BN(-1, 16));
+        if(a_neg) a = a.mul(new BN(-1));
+        if(b_neg) b = b.mul(new BN(-1));
         let res = a.mul(b)
         const neg = res.isNeg()
-        if(neg) res = res.mul(new BN(-1, 16))
+        if(neg) res = res.abs()
         process.stdout.write(ethers.utils.defaultAbiCoder.encode(['bool', 'bytes'], [neg, ethers.BigNumber.from(res.toString())]));
         break;
     }
@@ -55,12 +55,24 @@ switch(func){
         const b_neg = (process.argv[6] === 'true');
         let a = new BN(a_val, 16)
         let b = new BN(b_val, 16)
-        if(a_neg) a = a.mul(new BN(-1, 16));
-        if(b_neg) b = b.mul(new BN(-1, 16));
+        if(a_neg) a = a.mul(new BN(-1));
+        if(b_neg) b = b.mul(new BN(-1));
         let res = a.div(b)
         const neg = res.isNeg()
-        if(neg) res = res.mul(new BN(-1, 16))
+        if(neg) res = res.abs()
         process.stdout.write(ethers.utils.defaultAbiCoder.encode(['bool', 'bytes'], [neg, ethers.BigNumber.from(res.toString())]));
+        break;
+    }
+    case "invmod": {
+        const a_val = process.argv[3].substring(2);
+        const m_val = process.argv[4].substring(2);
+        let a = new BN(a_val, 16)
+        let m = new BN(m_val, 16)
+        let res = a.invm(m)
+        const neg = res.isNeg()
+        if(neg) res = res.mul(new BN(-1))
+        let valid = a.mul(res).mod(m).eq(new BN(1));
+        process.stdout.write(ethers.utils.defaultAbiCoder.encode(['bool', 'bool', 'bytes'], [valid, neg, ethers.BigNumber.from(res.toString())]));
         break;
     }
     case "mod": {
@@ -69,10 +81,10 @@ switch(func){
         const a_neg = (process.argv[5] === 'true');
         let a = new BN(a_val, 16)
         let n = new BN(n_val, 16)
-        if(a_neg) a = a.mul(new BN(-1, 16));
+        if(a_neg) a = a.mul(new BN(-1));
         let res = a.umod(n)
         const neg = res.isNeg()
-        if(neg) res = res.mul(new BN(-1, 16))
+        if(neg) res = res.abs()
         process.stdout.write(ethers.utils.defaultAbiCoder.encode(['bool', 'bytes'], [neg, ethers.BigNumber.from(res.toString())]));
         break;
     }
@@ -104,8 +116,8 @@ switch(func){
         let a = new BN(a_val, 16);
         let b = new BN(b_val, 16);
         if(signed){
-            if(a_neg) a = a.mul(new BN(-1, 16));
-            if(b_neg) b = b.mul(new BN(-1, 16));
+            if(a_neg) a = a.mul(new BN(-1));
+            if(b_neg) b = b.mul(new BN(-1));
         }
         let res = 0;
         if(a.gt(b)) res = 1;
@@ -122,11 +134,26 @@ switch(func){
         let a = new BN(a_val, 16)
         let b = new BN(b_val, 16)
         let n = new BN(n_val, 16)
-        if(a_neg) a = a.mul(new BN(-1, 16));
-        if(b_neg) b = b.mul(new BN(-1, 16));
+        if(a_neg) a = a.mul(new BN(-1));
+        if(b_neg) b = b.mul(new BN(-1));
         let res = a.mul(b).umod(n)
         const neg = res.isNeg()
-        if(neg) res = res.mul(new BN(-1, 16))
+        if(neg) res = res.abs()
+        process.stdout.write(ethers.utils.defaultAbiCoder.encode(['bool', 'bytes'], [neg, ethers.BigNumber.from(res.toString())]));
+        break;
+    }
+    case "modexp": {
+        const a_val = process.argv[3].substring(2);
+        const e_val = process.argv[4].substring(2);
+        const m_val = process.argv[5].substring(2);
+        let a = new BN(a_val, 16)
+        let e = new BN(e_val, 16)
+        let m = new BN(m_val, 16)
+        var reducedA = a.toRed(BN.red(m));
+        var reducedRes = reducedA.redPow(e);
+        var res = reducedRes.fromRed();
+        const neg = res.isNeg()
+        if(neg) res = res.abs()
         process.stdout.write(ethers.utils.defaultAbiCoder.encode(['bool', 'bytes'], [neg, ethers.BigNumber.from(res.toString())]));
         break;
     }
@@ -134,7 +161,7 @@ switch(func){
         const a_val = process.argv[3];
         const a_neg = (process.argv[4] === 'true');
         let a = new BN(a_val, 16)
-        if(a_neg) a = a.mul(new BN(-1, 16));
+        if(a_neg) a = a.mul(new BN(-1));
         let res = a.isZero()
         process.stdout.write(ethers.utils.defaultAbiCoder.encode(['bool'], [ethers.BigNumber.from(res.toString())]));
         break;

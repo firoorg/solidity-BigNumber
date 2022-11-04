@@ -1,11 +1,12 @@
-pragma solidity ^0.8.16;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
 
 import "../../src/BigNumbers.sol";
 import "./util/Strings.sol";
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
-contract BigNumbersDifferentialTest is Test, IBigNumbers {
+contract BigNumbersDifferentialTest is Test {
     using BigNumbers for *;
     using Strings for *;
     bytes constant ZERO = hex"0000000000000000000000000000000000000000000000000000000000000000";
@@ -136,7 +137,7 @@ contract BigNumbersDifferentialTest is Test, IBigNumbers {
         (bool neg, bytes memory js_res_val ) = abi.decode(jsResult, (bool, bytes));
         BigNumber memory js_res = js_res_val.init(neg);
         // function will fail if js_res is not the division result
-        a.div(b, js_res);
+        a.divVerify(b, js_res);
     }
 
     function testModMatchesJSImplementationFuzzed(bytes memory a_val, bytes memory n_val, bool a_neg) public {
@@ -261,14 +262,15 @@ contract BigNumbersDifferentialTest is Test, IBigNumbers {
         assertEq(js_res, res);
     }
 
-    // write a test case for modmul, modexp, and modinv
-
     function testModMulMatchesJSImplementationFuzzed(bytes memory a_val, bytes memory b_val, bytes memory n_val, bool a_neg, bool b_neg) public {
         vm.assume(a_val.length > 1 && b_val.length > 1 && n_val.length > 1);
         
         BigNumber memory a = a_val.init(a_neg);
         BigNumber memory b = b_val.init(b_neg);
         BigNumber memory n = n_val.init(false);
+        BigNumber memory zero = BigNumber(ZERO,false,0); 
+        vm.assume(n.cmp(zero, true)!=0); // assert that n is not zero
+
         BigNumber memory res = a.modmul(b, n);
         if(res.isZero()) res.neg = false;
 
@@ -294,6 +296,80 @@ contract BigNumbersDifferentialTest is Test, IBigNumbers {
         BigNumber memory js_res = js_res_val.init(neg);
 
         assertEq(js_res.eq(res), true);
+    }
+
+    function testInvModMatchesJSImplementationFuzzed(bytes memory a_val, bytes memory m_val) public {
+        vm.assume(a_val.length > 1 && m_val.length > 1);
+        BigNumber memory m = m_val.init(false);
+        BigNumber memory zero = BigNumber(ZERO,false,0); 
+        vm.assume(!m.eq(zero)); // assert that modulus is not zero
+        
+        BigNumber memory a = a_val.init(false);
+
+        (bool valid, BigNumber memory js_res ) = invMod(a, m);
+        vm.assume(valid); // we don't continue if there is no modular multiplicative inverse for a
+
+        // function will fail if js_res is not the inverse mod result
+        a.modinvVerify(m, js_res);
+    }
+
+    function testModExpMatchesJSImplementationFuzzed(bytes memory a_val, bytes memory e_val, bytes memory m_val) public {
+        vm.assume(a_val.length > 1 && e_val.length > 1 && m_val.length > 1);
+        BigNumber memory m = m_val.init(false);
+        BigNumber memory zero = BigNumber(ZERO,false,0); 
+        vm.assume(!m.eq(zero));
+        
+        BigNumber memory a = a_val.init(false);
+        (bool valid, BigNumber memory a_inv ) = invMod(a, m);
+        vm.assume(valid); // we don't continue if there is no modular multiplicative inverse for a
+
+        BigNumber memory e = e_val.init(true);
+
+        BigNumber memory res = a.modexp(a_inv, e, m);
+
+        string[] memory runJsInputs = new string[](10);
+
+        // build ffi command string
+        runJsInputs[0]  = 'npm';
+        runJsInputs[1]  = '--prefix';
+        runJsInputs[2]  = 'test/differential/scripts/';
+        runJsInputs[3]  = '--silent';
+        runJsInputs[4]  = 'run';
+        runJsInputs[5]  = 'differential';
+        runJsInputs[6]  = 'modexp';
+        runJsInputs[7]  = a_inv.val.toHexString();
+        runJsInputs[8]  = e_val.toHexString();
+        runJsInputs[9]  = m_val.toHexString();
+
+        // run and captures output
+        bytes memory jsResult = vm.ffi(runJsInputs);
+        (bool neg, bytes memory js_res_val ) = abi.decode(jsResult, (bool, bytes));
+
+        BigNumber memory js_res = js_res_val.init(neg);
+
+        assertEq(res.eq(js_res), true);
+    }
+
+    function invMod(BigNumber memory a, BigNumber memory m) public returns(bool, BigNumber memory) {
+        string[] memory runJsInputs = new string[](11);
+
+        // build ffi command string
+        runJsInputs[0]  = 'npm';
+        runJsInputs[1]  = '--prefix';
+        runJsInputs[2]  = 'test/differential/scripts/';
+        runJsInputs[3]  = '--silent';
+        runJsInputs[4]  = 'run';
+        runJsInputs[5]  = 'differential';
+        runJsInputs[6]  = 'invmod';
+        runJsInputs[7]  = a.val.toHexString();
+        runJsInputs[8]  = m.val.toHexString();
+
+        // run and captures output
+        bytes memory jsResult = vm.ffi(runJsInputs);
+        (bool valid, bool neg, bytes memory val ) = abi.decode(jsResult, (bool, bool, bytes));
+        BigNumber memory res = val.init(neg);
+
+        return (valid, res);
     }
 
     // write a test case for divmod
