@@ -3,33 +3,44 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 import "../src/BigNumbers.sol";
+import "../src/utils/Crypto.sol";
 
 contract BigNumbersTest is Test {
     using BigNumbers for *;
-    bytes constant ZERO = hex"0000000000000000000000000000000000000000000000000000000000000000";
-    bytes constant  ONE = hex"0000000000000000000000000000000000000000000000000000000000000001";
-    bytes constant  TWO = hex"0000000000000000000000000000000000000000000000000000000000000002";
-    
+    using Crypto for *;
+
+    function testRSA() public {
+        bytes memory Msg = hex'68656c6c6f20776f726c64'; // "hello world" in hex
+
+        BigNumber memory S = hex"079bed733b48d69bdb03076cb17d9809072a5a765460bc72072d687dba492afe951d75b814f561f253ee5cc0f3d703b6eab5b5df635b03a5437c0a5c179309812f5b5c97650361c645bc99f806054de21eb187bc0a704ed38d3d4c2871a117c19b6da7e9a3d808481c46b22652d15b899ad3792da5419e50ee38759560002388".init(false);
+
+        BigNumber memory e = hex"010001".init(false);
+
+        BigNumber memory nn = hex"df3edde009b96bc5b03b48bd73fe70a3ad20eaf624d0dc1ba121a45cc739893741b7cf82acf1c91573ec8266538997c6699760148de57e54983191eca0176f518e547b85fe0bb7d9e150df19eee734cf5338219c7f8f7b13b39f5384179f62c135e544cb70be7505751f34568e06981095aeec4f3a887639718a3e11d48c240d".init(false);
+
+        assertEq(Crypto.pkcs1Sha256VerifyRaw(Msg, S, e, nn), 0);
+    }
+
     function testInit() public {
         bytes memory val;
         BigNumber memory bn;
 
         val = hex"ffffffff";
-        bn = BigNumbers._init(val, false, 36);
+        bn = BigNumbers.init(val, false, 36);
         assertEq(bn.val.length,  0x20);
         assertEq(bn.val,  hex"00000000000000000000000000000000000000000000000000000000ffffffff");
         assertEq(bn.neg,  false);
         assertEq(bn.bitlen,  36);
 
         val = hex"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-        bn = BigNumbers._init(val, true, 0);
+        bn = BigNumbers.init(val, true);
         assertEq(bn.val.length,  0x20);
         assertEq(bn.val,  hex"00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         assertEq(bn.neg,  true);
         assertEq(bn.bitlen,  248);
 
         val = hex"0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-        bn = BigNumbers._init(val, false, 256);
+        bn = BigNumbers.init(val, false);
         assertEq(bn.val.length,  0x20);
         assertEq(bn.val,  hex"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         assertEq(bn.neg,  false);

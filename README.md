@@ -8,7 +8,7 @@ With the release of Metropolis, and the precompiled contract allowing modular ex
 ## Overview
 Values in memory on the EVM are in 256 bit (32 byte) words - `BigNumber`s in this library are considered to be consecutive words in big-endian order (top to bottom: word `0` - word `n`).
 
-The struct `BigNumber` defined in (`src/interfaces/IBigNumber`) consists of the bytes value, the bit-length, and the sign of the value.
+The struct `BigNumber` defined in (`src/BigNumber.sol`) consists of the bytes value, the bit-length, and the sign of the value.
 
 The value is in the Solidity `bytes` data structure. by default, this data structure is 'tightly packed', ie. it has no leading zeroes, and it has a 'length' word indicating the number of bytes in the structure.
 

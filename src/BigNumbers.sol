@@ -870,7 +870,7 @@ library BigNumbers {
         bytes memory val, 
         bool neg, 
         uint bitlen
-    ) internal view returns(BigNumber memory r){ 
+    ) private view returns(BigNumber memory r){ 
         // use identity at location 0x4 for cheap memcpy.
         // grab contents of val, load starting from memory end, update memory end pointer.
         assembly {
