@@ -8,7 +8,6 @@ struct BigNumber {
     uint bitlen;
 }
 
-
 /**
  * @notice BigNumbers library for Solidity.
  */
@@ -41,7 +40,8 @@ library BigNumbers {
 
     /** @notice initialize a BN instance
      *  @dev wrapper function for _init. initializes from bytes value.
-     *       Allows passing bitLength of value. This is NOT verified in the internal function. Only use where bitlen is explicitly known; otherwise use the other init function.
+     *       Allows passing bitLength of value. This is NOT verified in the internal function. Only use where bitlen is
+     *       explicitly known; otherwise use the other init function.
      *
      *  @param val BN value. may be of any size.
      *  @param neg neg whether the BN is +/-
@@ -91,9 +91,10 @@ library BigNumbers {
 
     // ***************** BEGIN EXPOSED CORE CALCULATION FUNCTIONS ******************
     /** @notice BigNumber addition: a + b.
-    /** @dev add: Initially prepare BigNumbers for addition operation; internally calls actual addition/subtraction, depending on inputs.
-      *                   In order to do correct addition or subtraction we have to handle the sign.
-      *                   This function discovers the sign of the result based on the inputs, and calls the correct operation.
+      * @dev add: Initially prepare BigNumbers for addition operation; internally calls actual addition/subtraction,
+      *           depending on inputs.
+      *           In order to do correct addition or subtraction we have to handle the sign.
+      *           This function discovers the sign of the result based on the inputs, and calls the correct operation.
       *
       * @param a first BN
       * @param b second BN
@@ -143,15 +144,15 @@ library BigNumbers {
     }
 
     /** @notice BigNumber subtraction: a - b.
-    *   @dev sub: Initially prepare BigNumbers for subtraction operation; internally calls actual addition/subtraction, depending on inputs.
-    *                   In order to do correct addition or subtraction we have to handle the sign.
-    *                   This function discovers the sign of the result based on the inputs, and calls the correct operation.
-    *
-    * @param a first BN
-    * @param b second BN
-    * @return r result - subtraction of a and b.
-    */  
-
+      * @dev sub: Initially prepare BigNumbers for subtraction operation; internally calls actual addition/subtraction,
+                  depending on inputs.
+      *           In order to do correct addition or subtraction we have to handle the sign.
+      *           This function discovers the sign of the result based on the inputs, and calls the correct operation.
+      *
+      * @param a first BN
+      * @param b second BN
+      * @return r result - subtraction of a and b.
+      */  
     function sub(
         BigNumber memory a, 
         BigNumber memory b
@@ -234,12 +235,12 @@ library BigNumbers {
       *                verify ((b*result) + (a % (b*result))) == a.
       *              eg. 17/7 == 2:
       *                verify  (7*2) + (17 % (7*2)) == 17.
-      * The function returns a bool on successful verification. The require statements will ensure that false can never be
-      * returned, however inheriting contracts may also want to put this function inside a require statement.
+      * The function returns a bool on successful verification. The require statements will ensure that false can never
+      *  be returned, however inheriting contracts may also want to put this function inside a require statement.
       *  
-      * @param a first BN
-      * @param b second BN
-      * @param r result BN
+      * @param a first BigNumber
+      * @param b second BigNumber
+      * @param r result BigNumber
       * @return bool whether or not the operation was verified
       */
     function divVerify(
@@ -293,9 +294,9 @@ library BigNumbers {
       * modexp precompile is used to achieve a^e; for this is work, we need to work out the minimum modulus value 
       * such that the modulus passed to modexp is not used. the result of a^e can never be more than size bitlen(a) * e.
       * 
-      * @param a BN
+      * @param a BigNumber
       * @param e exponent
-      * @return r result BN
+      * @return r result BigNumber
       */
     function pow(
         BigNumber memory a, 
@@ -307,9 +308,9 @@ library BigNumbers {
     /** @notice BigNumber modulus: a % n.
       * @dev mod: takes a BigNumber and modulus BigNumber (a,n), and calculates a % n.
       * modexp precompile is used to achieve a % n; an exponent of value '1' is passed.
-      * @param a BN
-      * @param n modulus BN
-      * @return r result BN
+      * @param a BigNumber
+      * @param n modulus BigNumber
+      * @return r result BigNumber
       */
     function mod(
         BigNumber memory a, 
@@ -391,7 +392,7 @@ library BigNumbers {
         return BigNumber(_result, false, bitlen);
     }
  
-    /** @notice modmul: modular multiplication: (a*b) % n.
+    /** @notice modular multiplication: (a*b) % n.
       * @dev modmul: Takes BigNumbers for a, b, and modulus, and computes (a*b) % modulus
       *              We call mul for the two input values, before calling modexp, passing exponent as 1.
       *              Sign is taken care of in sub-functions.
@@ -515,7 +516,10 @@ library BigNumbers {
       * @param b BigNumber
       * @return boolean result
       */
-    function eq(BigNumber memory a, BigNumber memory b) internal pure returns(bool){
+    function eq(
+        BigNumber memory a, 
+        BigNumber memory b
+    ) internal pure returns(bool){
         int result = cmp(a, b, true);
         return (result==0) ? true : false;
     }
@@ -527,7 +531,10 @@ library BigNumbers {
       * @param b BigNumber
       * @return boolean result
       */
-    function gt(BigNumber memory a, BigNumber memory b) internal pure returns(bool){
+    function gt(
+        BigNumber memory a, 
+        BigNumber memory b
+    ) internal pure returns(bool){
         int result = cmp(a, b, true);
         return (result==1) ? true : false;
     }
@@ -539,7 +546,10 @@ library BigNumbers {
       * @param b BigNumber
       * @return boolean result
       */
-    function gte(BigNumber memory a, BigNumber memory b) internal pure returns(bool){
+    function gte(
+        BigNumber memory a, 
+        BigNumber memory b
+    ) internal pure returns(bool){
         int result = cmp(a, b, true);
         return (result==1 || result==0) ? true : false;
     }
@@ -551,7 +561,10 @@ library BigNumbers {
       * @param b BigNumber
       * @return boolean result
       */
-    function lt(BigNumber memory a, BigNumber memory b) internal pure returns(bool){
+    function lt(
+        BigNumber memory a, 
+        BigNumber memory b
+    ) internal pure returns(bool){
         int result = cmp(a, b, true);
         return (result==-1) ? true : false;
     }
@@ -563,7 +576,10 @@ library BigNumbers {
       * @param b BigNumber
       * @return boolean result
       */
-    function lte(BigNumber memory a, BigNumber memory b) internal pure returns(bool){
+    function lte(
+        BigNumber memory a, 
+        BigNumber memory b
+    ) internal pure returns(bool){
         int result = cmp(a, b, true);
         return (result==-1 || result==0) ? true : false;
     }
@@ -575,457 +591,23 @@ library BigNumbers {
       * @param bits amount of bits to shift by
       * @return result BigNumber
       */
-    function shr(BigNumber memory a, uint bits) internal view returns(BigNumber memory){
+    function shr(
+        BigNumber memory a, 
+        uint bits
+    ) internal view returns(BigNumber memory){
         require(!a.neg);
         return _shr(a, bits);
     }
 
-    /** @notice left shift BigNumber value
-      * @dev shr: left shift BigNumber a by 'bits' bits.
-             copies input value to new memory location before shift and calls _shr function after. 
-      * @param a BigNumber value to shift
-      * @param bits amount of bits to shift by
-      * @return result BigNumber
-      */
-    function shl(BigNumber memory a, uint bits) internal view returns(BigNumber memory){
-        require(!a.neg);
-        return _shl(a, bits);
-    }
-
-    /** @notice sha3 hash a BigNumber.
-      * @dev hash: takes a BigNumber and performs sha3 hash on it.
-      *            we hash each BigNumber WITHOUT it's first word - first word is a pointer to the start of the bytes value,
-      *            and so is different for each struct.
-      *             
-      * @param a BigNumber
-      * @return h bytes32 hash.
-      */
-    function hash(BigNumber memory a) internal pure returns(bytes32 h) {
-        //amount of words to hash = all words of the value and three extra words: neg, bitlen & value length.     
-        assembly {
-            h := keccak256( add(a,0x20), add (mload(mload(a)), 0x60 ) ) 
-        }
-    }
-
-    function isZero(BigNumber memory a) internal pure returns(bool) {
-        return isZero(a.val) && a.val.length==0x20 && !a.neg && a.bitlen == 0;
-    }
-
-    function isZero(bytes memory val) internal pure returns(bool) {
-        uint msword;
-        uint msword_ptr;
-        assembly {
-            msword_ptr := add(val,0x20)
-        }
-        for(uint i=0; i<val.length; i+=32) {
-            assembly { msword := mload(msword_ptr) } // get msword of input
-            if(msword > 0) return false;
-            assembly { msword_ptr := add(msword_ptr, 0x20) }
-        }
-        return true;
-
-    }
-
-    /** @dev bitLength: get the bit length of an BigNumber memory value input.
-      *           
-      * parameter: bytes a
-      * returns: uint res.
-      */
-    function bitLength(BigNumber memory a) internal pure returns(uint){
-        return bitLength(a.val);
-    }
-
-    /** @dev bitLength: get the bit length of an BigNumber memory value input.
-      * parameter: bytes a
-      * returns: uint res.
-      */
-    function bitLength(bytes memory a) internal pure returns(uint r){
-        if(isZero(a)) return 0;
-        uint msword; 
-        assembly {
-            msword := mload(add(a,0x20))                   // get msword of input
-        }
-        r = bitLength(msword);                       // get bitlen of msword, add to size of remaining words.
-        assembly {                                           
-            r := add(r, mul(sub(mload(a), 0x20) , 8))  // res += (val.length-32)*8;  
-        }
-    }
-
-    /** @dev bitLength: get the bit length of a uint input - ie. log2_256 (most significant bit of 256 bit value (one EVM word))
-      *                       credit: Tjaden Hess @ ethereum.stackexchange             
-      * parameter: uint a
-      * returns: uint r.
-      */
-    function bitLength(uint a) internal pure returns (uint r){
-        assembly {
-            switch eq(a, 0)
-            case 1 {
-                r := 0
-            }
-            default {
-                let arg := a
-                a := sub(a,1)
-                a := or(a, div(a, 0x02))
-                a := or(a, div(a, 0x04))
-                a := or(a, div(a, 0x10))
-                a := or(a, div(a, 0x100))
-                a := or(a, div(a, 0x10000))
-                a := or(a, div(a, 0x100000000))
-                a := or(a, div(a, 0x10000000000000000))
-                a := or(a, div(a, 0x100000000000000000000000000000000))
-                a := add(a, 1)
-                let m := mload(0x40)
-                mstore(m,           0xf8f9cbfae6cc78fbefe7cdc3a1793dfcf4f0e8bbd8cec470b6a28a7a5a3e1efd)
-                mstore(add(m,0x20), 0xf5ecf1b3e9debc68e1d9cfabc5997135bfb7a7a3938b7b606b5b4b3f2f1f0ffe)
-                mstore(add(m,0x40), 0xf6e4ed9ff2d6b458eadcdf97bd91692de2d4da8fd2d0ac50c6ae9a8272523616)
-                mstore(add(m,0x60), 0xc8c0b887b0a8a4489c948c7f847c6125746c645c544c444038302820181008ff)
-                mstore(add(m,0x80), 0xf7cae577eec2a03cf3bad76fb589591debb2dd67e0aa9834bea6925f6a4a2e0e)
-                mstore(add(m,0xa0), 0xe39ed557db96902cd38ed14fad815115c786af479b7e83247363534337271707)
-                mstore(add(m,0xc0), 0xc976c13bb96e881cb166a933a55e490d9d56952b8d4e801485467d2362422606)
-                mstore(add(m,0xe0), 0x753a6d1b65325d0c552a4d1345224105391a310b29122104190a110309020100)
-                mstore(0x40, add(m, 0x100))
-                let magic := 0x818283848586878898a8b8c8d8e8f929395969799a9b9d9e9faaeb6bedeeff
-                let shift := 0x100000000000000000000000000000000000000000000000000000000000000
-                let _a := div(mul(a, magic), shift)
-                r := div(mload(add(m,sub(255,_a))), shift)
-                r := add(r, mul(256, gt(arg, 0x8000000000000000000000000000000000000000000000000000000000000000)))
-                // where a is a power of two, result needs to be incremented. we use the power of two trick here: if(arg & arg-1 == 0) ++r;
-                if eq(and(arg, sub(arg, 1)), 0) {
-                    r := add(r, 1) 
-                }
-            }
-        }
-    }
-
-    function zero() internal pure returns(BigNumber memory) {
-        return BigNumber(ZERO, false, 0);
-    }
-
-    function one() internal pure returns(BigNumber memory) {
-        return BigNumber(ONE, false, 1);
-    }
-
-    function two() internal pure returns(BigNumber memory) {
-        return BigNumber(TWO, false, 2);
-    }
-    // ***************** END EXPOSED HELPER FUNCTIONS ******************
-
-
-
-
-    // ***************** START PRIVATE MANAGEMENT FUNCTIONS ******************
-
-    /** @dev init: Create a new BigNumber.
-      *            overloading allows caller to obtionally pass bitlen where it is known - as it is cheaper to do off-chain and verify on-chain. 
-      *            we assert input is in data structure as defined above, and that bitlen, if passed, is correct.
-      *            'copy' parameter indicates whether or not to copy the contents of val to a new location in memory (for example where you pass 
-                   the contents of another variable's value in)
-      * parameter: bytes val - bignum value.
-      * parameter: bool  neg - sign of value
-      * parameter: uint bitlen - bit length of value
-      * returns: BigNumber memory r.
-      */
-    function _init(bytes memory val, bool neg, uint bitlen) internal view returns(BigNumber memory r){ 
-        // use identity at location 0x4 for cheap memcpy.
-        // grab contents of val, load starting from memory end, update memory end pointer.
-
-        assembly {
-            let data := add(val, 0x20)
-            let length := mload(val)
-            let out
-            let freemem := msize()
-            switch eq(mod(length, 0x20), 0)                       // if(val.length % 32 == 0)
-                case 1 {
-                    out     := add(freemem, 0x20)                 // freememory location + length word
-                    mstore(freemem, length)                       // set new length 
-                }
-                default { 
-                    let offset  := sub(0x20, mod(length, 0x20))   // offset: 32 - (length % 32)
-                    out     := add(add(freemem, offset), 0x20)    // freememory location + offset + length word
-                    mstore(freemem, add(length, offset))          // set new length 
-                }
-            pop(staticcall(450, 0x4, data, length, out, length))  // copy into 'out' memory location
-            mstore(0x40, add(freemem, add(mload(freemem), 0x20))) // update the free memory pointer
-            
-            // handle leading zero words. assume freemem is pointer to bytes value
-            let bn_length := mload(freemem)
-            for { } eq ( eq(bn_length, 0x20), 0) { } {              // for(; length!=32; length-=32)
-             switch eq(mload(add(freemem, 0x20)),0)              // if(msword==0):
-                    case 1 { freemem := add(freemem, 0x20) }        //     update length pointer
-                    default { break }                               // else: loop termination. non-zero word found
-                bn_length := sub(bn_length,0x20)                          
-            } 
-            mstore(freemem, bn_length)                             
-
-            mstore(r, freemem)                                    // store new bytes value in r
-            mstore(add(r, 0x20), neg)                             // store neg value in r
-        }
-
-        r.bitlen = bitlen == 0 ? bitLength(r.val) : bitlen;
-    }
-    // ***************** END PRIVATE MANAGEMENT FUNCTIONS ******************
-
-
-
-
-    // ***************** START PRIVATE CORE CALCULATION FUNCTIONS ******************
-    /** @dev _add: takes two BigNumber memory values and the bitlen of the max value, and adds them.
-      *              This function is private and only callable from add: therefore the values may be of different sizes, 
-      *              in any order of size, and of different signs (handled in add).
-      *              As values may be of different sizes, inputs are considered starting from the least significant words, working back. 
-      *              The function calculates the new bitlen (basically if bitlens are the same for max and min, max_bitlen++) and returns a new BigNumber memory value.
-      *
-      * parameter: bytes max -  biggest value  (determined from add)
-      * parameter: bytes min -  smallest value (determined from add)
-      * parameter: uint max_bitlen -  bit length of max value.
-      * returns: bytes result - max + min.
-      * returns: uint - bit length of result.
-      */
-    function _add(bytes memory max, bytes memory min, uint max_bitlen) private pure returns (bytes memory, uint) {
-        bytes memory result;
-        assembly {
-
-            let result_start := msize()                                       // Get the highest available block of memory
-            let carry := 0
-            let uint_max := sub(0,1)
-
-            let max_ptr := add(max, mload(max))
-            let min_ptr := add(min, mload(min))                               // point to last word of each byte array.
-
-            let result_ptr := add(add(result_start,0x20), mload(max))         // set result_ptr end.
-
-            for { let i := mload(max) } eq(eq(i,0),0) { i := sub(i, 0x20) } { // for(int i=max_length; i!=0; i-=32)
-                let max_val := mload(max_ptr)                                 // get next word for 'max'
-                switch gt(i,sub(mload(max),mload(min)))                       // if(i>(max_length-min_length)). while 'min' words are still available.
-                    case 1{ 
-
-                        let min_val := mload(min_ptr)                         //      get next word for 'min'
-        
-                        mstore(result_ptr, add(add(max_val,min_val),carry))   //      result_word = max_word+min_word+carry
-                    
-                        switch gt(max_val, sub(uint_max,sub(min_val,carry)))  //      this switch block finds whether or not to set the carry bit for the next iteration.
-                            case 1  { carry := 1 }
-                            default {
-                                switch and(eq(max_val,uint_max),or(gt(carry,0), gt(min_val,0)))
-                                case 1 { carry := 1 }
-                                default{ carry := 0 }
-                            }
-                            
-                        min_ptr := sub(min_ptr,0x20)                       //       point to next 'min' word
-                    }
-                    default{                                               // else: remainder after 'min' words are complete.
-                        mstore(result_ptr, add(max_val,carry))             //       result_word = max_word+carry
-                        
-                        switch and( eq(uint_max,max_val), eq(carry,1) )    //       this switch block finds whether or not to set the carry bit for the next iteration.
-                            case 1  { carry := 1 }
-                            default { carry := 0 }
-                    }
-                result_ptr := sub(result_ptr,0x20)                         // point to next 'result' word
-                max_ptr := sub(max_ptr,0x20)                               // point to next 'max' word
-            }
-
-            switch eq(carry,0) 
-                case 1{ result_start := add(result_start,0x20) }           // if carry is 0, increment result_start, ie. length word for result is now one word position ahead.
-                default { mstore(result_ptr, 1) }                          // else if carry is 1, store 1; overflow has occured, so length word remains in the same position.
-
-            result := result_start                                         // point 'result' bytes value to the correct address in memory
-            mstore(result,add(mload(max),mul(0x20,carry)))                 // store length of result. we are finished with the byte array.
-            
-            mstore(0x40, add(result,add(mload(result),0x20)))              // Update freemem pointer to point to new end of memory.
-
-            /* we now calculate the result's bit length.
-             * with addition, if we assume that some a is at least equal to some b, then the resulting bit length will be a's bit length or (a's bit length)+1, depending on carry bit.
-             * this is cheaper than calling bitLength.
-             */
-            let msword := mload(add(result,0x20))                             // calculate get most significant word of result
-            if or( eq(msword, 1), eq(shr(mod(max_bitlen,256),msword),1) ) { // if(msword==1 || msword>>(max_bitlen % 256)==1):
-                
-                    max_bitlen := add(max_bitlen, 1)                          // if msword's bit length is 1 greater than max_bitlen, OR overflow occured, new bitlen is max_bitlen+1.
-                }
-        }
-        
-
-        return (result, max_bitlen);
-    }
-
-    
-
-    /** @dev _sub: takes two BigNumber memory values and subtracts them.
-      *              This function is private and only callable from add: therefore the values may be of different sizes, 
-      *              in any order of size, and of different signs (handled in add).
-      *              As values may be of different sizes, inputs are considered starting from the least significant words, working back. 
-      *              The function calculates the new bitlen (basically if bitlens are the same for max and min, max_bitlen++) and returns a new BigNumber memory value.
-      *
-      * parameter: bytes max -  biggest value  (determined from add)
-      * parameter: bytes min -  smallest value (determined from add)
-      * parameter: uint max_bitlen -  bit length of max value.
-      * returns: bytes result - max + min.
-      * returns: uint - bit length of result.
-      */
-    function _sub(bytes memory max, bytes memory min) internal pure returns (bytes memory, uint) {
-        bytes memory result;
-        uint carry = 0;
-        uint uint_max = type(uint256).max;
-        assembly {
-                
-            let result_start := msize()                                         // Get the highest available block of memory
-        
-            let max_len := mload(max)
-            let min_len := mload(min)                                           // load lengths of inputs
-            
-            let len_diff := sub(max_len,min_len)                                // get differences in lengths.
-            
-            let max_ptr := add(max, max_len)
-            let min_ptr := add(min, min_len)                                    // go to end of arrays
-            let result_ptr := add(result_start, max_len)                        // point to least significant result word.
-            let memory_end := add(result_ptr,0x20)                              // save memory_end to update free memory pointer at the end.
-            
-            for { let i := max_len } eq(eq(i,0),0) { i := sub(i, 0x20) } {      // for(int i=max_length; i!=0; i-=32)
-                let max_val := mload(max_ptr)                                   // get next word for 'max'
-                switch gt(i,len_diff)                                           // if(i>(max_length-min_length)). while 'min' words are still available.
-                    case 1{ 
-                        let min_val := mload(min_ptr)                           //      get next word for 'min'
-        
-                        mstore(result_ptr, sub(sub(max_val,min_val),carry))     //      result_word = (max_word-min_word)-carry
-                    
-                        switch or(lt(max_val, add(min_val,carry)), 
-                               and(eq(min_val,uint_max), eq(carry,1)))          //      this switch block finds whether or not to set the carry bit for the next iteration.
-                            case 1  { carry := 1 }
-                            default { carry := 0 }
-                            
-                        min_ptr := sub(min_ptr,0x20)                            //      point to next 'result' word
-                    }
-                    default{                                                    // else: remainder after 'min' words are complete.
-
-                        mstore(result_ptr, sub(max_val,carry))                  //      result_word = max_word-carry
-                    
-                        switch and( eq(max_val,0), eq(carry,1) )                //      this switch block finds whether or not to set the carry bit for the next iteration.
-                            case 1  { carry := 1 }
-                            default { carry := 0 }
-
-                    }
-                result_ptr := sub(result_ptr,0x20)                              // point to next 'result' word
-                max_ptr    := sub(max_ptr,0x20)                                 // point to next 'max' word
-            }      
-
-            //the following code removes any leading words containing all zeroes in the result.
-            result_ptr := add(result_ptr,0x20)                                                 
-            for { }   eq(mload(result_ptr), 0) { result_ptr := add(result_ptr,0x20) } { // for(result_ptr+=32;; result==0; result_ptr+=32)
-               result_start := add(result_start, 0x20)                                  // push up the start pointer for the result..
-               max_len := sub(max_len,0x20)                                             // and subtract a word (32 bytes) from the result length.
-            } 
-
-            result := result_start                                                      // point 'result' bytes value to the correct address in memory
-            
-            mstore(result,max_len)                                                      // store length of result. we are finished with the byte array.
-            
-            mstore(0x40, memory_end)                                                    // Update freemem pointer.
-        }
-
-        uint new_bitlen = bitLength(result);                                       // calculate the result's bit length.
-        
-        return (result, new_bitlen);
-    }
-
-    function _powModulus(BigNumber memory a, uint e) private pure returns(BigNumber memory){
-        bytes memory _modulus = ZERO;
-        uint mod_index;
-
-        //we pass the minimum modulus value which would return JUST the a^b part of the calculation in modexp; therefore the value may be many words long.
-        //This is done by:
-        //  - storing total modulus byte length
-        //  - storing first word of modulus with correct bit set
-        //  - updating the free memory pointer to come after total length.
-        assembly {
-            mod_index := mul(mload(add(a, 0x40)), e)               // a.bitlen * e is the max bitlength of result
-            let first_word_modulus := shl(mod(mod_index, 256), 1)  // set bit in first modulus word.
-            mstore(_modulus, mul(add(div(mod_index,256),1),0x20))  // store length of modulus
-            mstore(add(_modulus,0x20), first_word_modulus)         // set first modulus word
-            mstore(0x40, add(_modulus, add(mload(_modulus),0x20))) // update freemem pointer to be modulus index + length
-        }
-
-        //create modulus BigNumber memory for modexp function
-        return BigNumber(_modulus, false, mod_index); 
-    }
-
-    /** @dev modexp: Takes BigNumber memory values for base, exp, mod and calls precompile for (_base^_exp)%^mod
-      *              Wrapper for built-in modexp (contract 0x5) as described here - https://github.com/ethereum/EIPs/pull/198
-      *
-      * parameter: bytes base
-      * parameter: bytes base_inverse 
-      * parameter: bytes exponent
-      * returns: bytes ret.
-      */
-    function _modexp(bytes memory _base, bytes memory _exp, bytes memory _mod) private view returns(bytes memory ret) {
-        assembly {
-            
-            let bl := mload(_base)
-            let el := mload(_exp)
-            let ml := mload(_mod)
-            
-            
-            let freemem := mload(0x40) // Free memory pointer is always stored at 0x40
-            
-            
-            mstore(freemem, bl)         // arg[0] = base.length @ +0
-            
-            mstore(add(freemem,32), el) // arg[1] = exp.length @ +32
-            
-            mstore(add(freemem,64), ml) // arg[2] = mod.length @ +64
-            
-            // arg[3] = base.bits @ + 96
-            // Use identity built-in (contract 0x4) as a cheap memcpy
-            let success := staticcall(450, 0x4, add(_base,32), bl, add(freemem,96), bl)
-            
-            // arg[4] = exp.bits @ +96+base.length
-            let size := add(96, bl)
-            success := staticcall(450, 0x4, add(_exp,32), el, add(freemem,size), el)
-            
-            // arg[5] = mod.bits @ +96+base.length+exp.length
-            size := add(size,el)
-            success := staticcall(450, 0x4, add(_mod,32), ml, add(freemem,size), ml)
-            
-            switch success case 0 { invalid() } //fail where we haven't enough gas to make the call
-
-            // Total size of input = 96+base.length+exp.length+mod.length
-            size := add(size,ml)
-            // Invoke contract 0x5, put return value right after mod.length, @ +96
-            success := staticcall(sub(gas(), 1350), 0x5, freemem, size, add(freemem, 0x60), ml)
-
-            switch success case 0 { invalid() } //fail where we haven't enough gas to make the call
-
-            let length := ml
-            let msword_ptr := add(freemem, 0x60)
-
-            ///the following code removes any leading words containing all zeroes in the result.
-            for { } eq ( eq(length, 0x20), 0) { } {                   // for(; length!=32; length-=32)
-                switch eq(mload(msword_ptr),0)                        // if(msword==0):
-                    case 1 { msword_ptr := add(msword_ptr, 0x20) }    //     update length pointer
-                    default { break }                                 // else: loop termination. non-zero word found
-                length := sub(length,0x20)                          
-            } 
-            ret := sub(msword_ptr,0x20)
-            mstore(ret, length)
-            
-            // point to the location of the return value (length, bits)
-            //assuming mod length is multiple of 32, return value is already in the right format.
-            mstore(0x40, add(add(96, freemem),ml)) //deallocate freemem pointer
-        }        
-    }
-    // ***************** END PRIVATE CORE CALCULATION FUNCTIONS ******************
-
-
-
-
-    // ***************** START PRIVATE HELPER FUNCTIONS ******************
-    /** @dev shr: right shift BigNumber memory 'dividend' by 'value' bits.
-             Shifts input value in-place, ie. does not create new memory. wrapper function above does this.
-        right shift does not necessarily have to copy into a new memory location. where the user wishes the modify the existing value they have in place, they can use this.  
+    /** @notice right shift BigNumber memory 'dividend' by 'bits' bits.
+      * @dev _shr: Shifts input value in-place, ie. does not create new memory. shr function does this.
+      * right shift does not necessarily have to copy into a new memory location. where the user wishes the modify
+      * the existing value they have in place, they can use this.  
       * @param bn value to shift
       * @param bits amount of bits to shift by
       * @return r result
       */
-    function _shr(BigNumber memory bn, uint bits) private view returns(BigNumber memory){
+    function _shr(BigNumber memory bn, uint bits) internal view returns(BigNumber memory){
         uint length;
         assembly { length := mload(mload(bn)) }
 
@@ -1036,7 +618,8 @@ library BigNumbers {
         bn.bitlen = bn.bitlen-(bits);
 
         // handle shifts greater than 256:
-        // if bits is greater than 256 we can simply remove any trailing words, by altering the BN length. we also update 'bits' so that it is now in the range 0..256.
+        // if bits is greater than 256 we can simply remove any trailing words, by altering the BN length. 
+        // we also update 'bits' so that it is now in the range 0..256.
         assembly {
             if or(gt(bits, 0x100), eq(bits, 0x100)) {
                 length := sub(length, mul(div(bits, 0x100), 0x20))
@@ -1091,7 +674,555 @@ library BigNumbers {
         return bn;
     }
 
-    function _shl(BigNumber memory bn, uint bits) private view returns(BigNumber memory r) {
+    /** @notice left shift BigNumber value
+      * @dev shr: left shift BigNumber a by 'bits' bits.
+                  ensures the value is not negative before calling the private function.
+      * @param a BigNumber value to shift
+      * @param bits amount of bits to shift by
+      * @return result BigNumber
+      */
+    function shl(
+        BigNumber memory a, 
+        uint bits
+    ) internal view returns(BigNumber memory){
+        require(!a.neg);
+        return _shl(a, bits);
+    }
+
+    /** @notice sha3 hash a BigNumber.
+      * @dev hash: takes a BigNumber and performs sha3 hash on it.
+      *            we hash each BigNumber WITHOUT it's first word - first word is a pointer to the start of the bytes value,
+      *            and so is different for each struct.
+      *             
+      * @param a BigNumber
+      * @return h bytes32 hash.
+      */
+    function hash(
+        BigNumber memory a
+    ) internal pure returns(bytes32 h) {
+        //amount of words to hash = all words of the value and three extra words: neg, bitlen & value length.     
+        assembly {
+            h := keccak256( add(a,0x20), add (mload(mload(a)), 0x60 ) ) 
+        }
+    }
+
+    /** @notice BigNumber full zero check
+      * @dev isZero: checks if the BigNumber is in the default zero format for BNs (ie. the result from zero()).
+      *             
+      * @param a BigNumber
+      * @return boolean result.
+      */
+    function isZero(
+        BigNumber memory a
+    ) internal pure returns(bool) {
+        return isZero(a.val) && a.val.length==0x20 && !a.neg && a.bitlen == 0;
+    }
+
+
+    /** @notice bytes zero check
+      * @dev isZero: checks if input bytes value resolves to zero.
+      *             
+      * @param a bytes value
+      * @return boolean result.
+      */
+    function isZero(
+        bytes memory a
+    ) internal pure returns(bool) {
+        uint msword;
+        uint msword_ptr;
+        assembly {
+            msword_ptr := add(a,0x20)
+        }
+        for(uint i=0; i<a.length; i+=32) {
+            assembly { msword := mload(msword_ptr) } // get msword of input
+            if(msword > 0) return false;
+            assembly { msword_ptr := add(msword_ptr, 0x20) }
+        }
+        return true;
+
+    }
+
+    /** @notice BigNumber value bit length
+      * @dev bitLength: returns BigNumber value bit length- ie. log2 (most significant bit of value)
+      *             
+      * @param a BigNumber
+      * @return uint bit length result.
+      */
+    function bitLength(
+        BigNumber memory a
+    ) internal pure returns(uint){
+        return bitLength(a.val);
+    }
+
+    /** @notice bytes bit length
+      * @dev bitLength: returns bytes bit length- ie. log2 (most significant bit of value)
+      *             
+      * @param a bytes value
+      * @return r uint bit length result.
+      */
+    function bitLength(
+        bytes memory a
+    ) internal pure returns(uint r){
+        if(isZero(a)) return 0;
+        uint msword; 
+        assembly {
+            msword := mload(add(a,0x20))               // get msword of input
+        }
+        r = bitLength(msword);                         // get bitlen of msword, add to size of remaining words.
+        assembly {                                           
+            r := add(r, mul(sub(mload(a), 0x20) , 8))  // res += (val.length-32)*8;  
+        }
+    }
+
+    /** @notice uint bit length
+        @dev bitLength: get the bit length of a uint input - ie. log2 (most significant bit of 256 bit value (one EVM word))
+      *                       credit: Tjaden Hess @ ethereum.stackexchange             
+      * @param a uint value
+      * @return r uint bit length result.
+      */
+    function bitLength(
+        uint a
+    ) internal pure returns (uint r){
+        assembly {
+            switch eq(a, 0)
+            case 1 {
+                r := 0
+            }
+            default {
+                let arg := a
+                a := sub(a,1)
+                a := or(a, div(a, 0x02))
+                a := or(a, div(a, 0x04))
+                a := or(a, div(a, 0x10))
+                a := or(a, div(a, 0x100))
+                a := or(a, div(a, 0x10000))
+                a := or(a, div(a, 0x100000000))
+                a := or(a, div(a, 0x10000000000000000))
+                a := or(a, div(a, 0x100000000000000000000000000000000))
+                a := add(a, 1)
+                let m := mload(0x40)
+                mstore(m,           0xf8f9cbfae6cc78fbefe7cdc3a1793dfcf4f0e8bbd8cec470b6a28a7a5a3e1efd)
+                mstore(add(m,0x20), 0xf5ecf1b3e9debc68e1d9cfabc5997135bfb7a7a3938b7b606b5b4b3f2f1f0ffe)
+                mstore(add(m,0x40), 0xf6e4ed9ff2d6b458eadcdf97bd91692de2d4da8fd2d0ac50c6ae9a8272523616)
+                mstore(add(m,0x60), 0xc8c0b887b0a8a4489c948c7f847c6125746c645c544c444038302820181008ff)
+                mstore(add(m,0x80), 0xf7cae577eec2a03cf3bad76fb589591debb2dd67e0aa9834bea6925f6a4a2e0e)
+                mstore(add(m,0xa0), 0xe39ed557db96902cd38ed14fad815115c786af479b7e83247363534337271707)
+                mstore(add(m,0xc0), 0xc976c13bb96e881cb166a933a55e490d9d56952b8d4e801485467d2362422606)
+                mstore(add(m,0xe0), 0x753a6d1b65325d0c552a4d1345224105391a310b29122104190a110309020100)
+                mstore(0x40, add(m, 0x100))
+                let magic := 0x818283848586878898a8b8c8d8e8f929395969799a9b9d9e9faaeb6bedeeff
+                let shift := 0x100000000000000000000000000000000000000000000000000000000000000
+                let _a := div(mul(a, magic), shift)
+                r := div(mload(add(m,sub(255,_a))), shift)
+                r := add(r, mul(256, gt(arg, 0x8000000000000000000000000000000000000000000000000000000000000000)))
+                // where a is a power of two, result needs to be incremented. we use the power of two trick here: if(arg & arg-1 == 0) ++r;
+                if eq(and(arg, sub(arg, 1)), 0) {
+                    r := add(r, 1) 
+                }
+            }
+        }
+    }
+
+    /** @notice BigNumber zero value
+        @dev zero: returns zero encoded as a BigNumber
+      * @return zero encoded as BigNumber
+      */
+    function zero(
+    ) internal pure returns(BigNumber memory) {
+        return BigNumber(ZERO, false, 0);
+    }
+
+    /** @notice BigNumber one value
+        @dev one: returns one encoded as a BigNumber
+      * @return one encoded as BigNumber
+      */
+    function one(
+    ) internal pure returns(BigNumber memory) {
+        return BigNumber(ONE, false, 1);
+    }
+
+    /** @notice BigNumber two value
+        @dev two: returns two encoded as a BigNumber
+      * @return two encoded as BigNumber
+      */
+    function two(
+    ) internal pure returns(BigNumber memory) {
+        return BigNumber(TWO, false, 2);
+    }
+    // ***************** END EXPOSED HELPER FUNCTIONS ******************
+
+
+
+
+
+    // ***************** START PRIVATE MANAGEMENT FUNCTIONS ******************
+    /** @notice Create a new BigNumber.
+        @dev init: overloading allows caller to obtionally pass bitlen where it is known - as it is cheaper to do off-chain and verify on-chain. 
+      *            we assert input is in data structure as defined above, and that bitlen, if passed, is correct.
+      *            'copy' parameter indicates whether or not to copy the contents of val to a new location in memory (for example where you pass 
+      *            the contents of another variable's value in)
+      * @param val bytes - bignum value.
+      * @param neg bool - sign of value
+      * @param bitlen uint - bit length of value
+      * @return r BigNumber initialized value.
+      */
+    function _init(
+        bytes memory val, 
+        bool neg, 
+        uint bitlen
+    ) internal view returns(BigNumber memory r){ 
+        // use identity at location 0x4 for cheap memcpy.
+        // grab contents of val, load starting from memory end, update memory end pointer.
+        assembly {
+            let data := add(val, 0x20)
+            let length := mload(val)
+            let out
+            let freemem := msize()
+            switch eq(mod(length, 0x20), 0)                       // if(val.length % 32 == 0)
+                case 1 {
+                    out     := add(freemem, 0x20)                 // freememory location + length word
+                    mstore(freemem, length)                       // set new length 
+                }
+                default { 
+                    let offset  := sub(0x20, mod(length, 0x20))   // offset: 32 - (length % 32)
+                    out     := add(add(freemem, offset), 0x20)    // freememory location + offset + length word
+                    mstore(freemem, add(length, offset))          // set new length 
+                }
+            pop(staticcall(450, 0x4, data, length, out, length))  // copy into 'out' memory location
+            mstore(0x40, add(freemem, add(mload(freemem), 0x20))) // update the free memory pointer
+            
+            // handle leading zero words. assume freemem is pointer to bytes value
+            let bn_length := mload(freemem)
+            for { } eq ( eq(bn_length, 0x20), 0) { } {            // for(; length!=32; length-=32)
+             switch eq(mload(add(freemem, 0x20)),0)               // if(msword==0):
+                    case 1 { freemem := add(freemem, 0x20) }      //     update length pointer
+                    default { break }                             // else: loop termination. non-zero word found
+                bn_length := sub(bn_length,0x20)                          
+            } 
+            mstore(freemem, bn_length)                             
+
+            mstore(r, freemem)                                    // store new bytes value in r
+            mstore(add(r, 0x20), neg)                             // store neg value in r
+        }
+
+        r.bitlen = bitlen == 0 ? bitLength(r.val) : bitlen;
+    }
+    // ***************** END PRIVATE MANAGEMENT FUNCTIONS ******************
+
+
+
+
+
+    // ***************** START PRIVATE CORE CALCULATION FUNCTIONS ******************
+    /** @notice takes two BigNumber memory values and the bitlen of the max value, and adds them.
+      * @dev _add: This function is private and only callable from add: therefore the values may be of different sizes,
+      *            in any order of size, and of different signs (handled in add).
+      *            As values may be of different sizes, inputs are considered starting from the least significant 
+      *            words, working back. 
+      *            The function calculates the new bitlen (basically if bitlens are the same for max and min, 
+      *            max_bitlen++) and returns a new BigNumber memory value.
+      *
+      * @param max bytes -  biggest value  (determined from add)
+      * @param min bytes -  smallest value (determined from add)
+      * @param max_bitlen uint - bit length of max value.
+      * @return bytes result - max + min.
+      * @return uint - bit length of result.
+      */
+    function _add(
+        bytes memory max, 
+        bytes memory min, 
+        uint max_bitlen
+    ) private pure returns (bytes memory, uint) {
+        bytes memory result;
+        assembly {
+
+            let result_start := msize()                                       // Get the highest available block of memory
+            let carry := 0
+            let uint_max := sub(0,1)
+
+            let max_ptr := add(max, mload(max))
+            let min_ptr := add(min, mload(min))                               // point to last word of each byte array.
+
+            let result_ptr := add(add(result_start,0x20), mload(max))         // set result_ptr end.
+
+            for { let i := mload(max) } eq(eq(i,0),0) { i := sub(i, 0x20) } { // for(int i=max_length; i!=0; i-=32)
+                let max_val := mload(max_ptr)                                 // get next word for 'max'
+                switch gt(i,sub(mload(max),mload(min)))                       // if(i>(max_length-min_length)). while 
+                                                                              // 'min' words are still available.
+                    case 1{ 
+                        let min_val := mload(min_ptr)                         //      get next word for 'min'
+                        mstore(result_ptr, add(add(max_val,min_val),carry))   //      result_word = max_word+min_word+carry
+                        switch gt(max_val, sub(uint_max,sub(min_val,carry)))  //      this switch block finds whether or
+                                                                              //      not to set the carry bit for the
+                                                                              //      next iteration.
+                            case 1  { carry := 1 }
+                            default {
+                                switch and(eq(max_val,uint_max),or(gt(carry,0), gt(min_val,0)))
+                                case 1 { carry := 1 }
+                                default{ carry := 0 }
+                            }
+                            
+                        min_ptr := sub(min_ptr,0x20)                       //       point to next 'min' word
+                    }
+                    default{                                               // else: remainder after 'min' words are complete.
+                        mstore(result_ptr, add(max_val,carry))             //       result_word = max_word+carry
+                        
+                        switch and( eq(uint_max,max_val), eq(carry,1) )    //       this switch block finds whether or 
+                                                                           //       not to set the carry bit for the 
+                                                                           //       next iteration.
+                            case 1  { carry := 1 }
+                            default { carry := 0 }
+                    }
+                result_ptr := sub(result_ptr,0x20)                         // point to next 'result' word
+                max_ptr := sub(max_ptr,0x20)                               // point to next 'max' word
+            }
+
+            switch eq(carry,0) 
+                case 1{ result_start := add(result_start,0x20) }           // if carry is 0, increment result_start, ie.
+                                                                           // length word for result is now one word 
+                                                                           // position ahead.
+                default { mstore(result_ptr, 1) }                          // else if carry is 1, store 1; overflow has
+                                                                           // occured, so length word remains in the 
+                                                                           // same position.
+
+            result := result_start                                         // point 'result' bytes value to the correct
+                                                                           // address in memory.
+            mstore(result,add(mload(max),mul(0x20,carry)))                 // store length of result. we are finished 
+                                                                           // with the byte array.
+            
+            mstore(0x40, add(result,add(mload(result),0x20)))              // Update freemem pointer to point to new 
+                                                                           // end of memory.
+
+            // we now calculate the result's bit length.
+            // with addition, if we assume that some a is at least equal to some b, then the resulting bit length will
+            // be a's bit length or (a's bit length)+1, depending on carry bit.this is cheaper than calling bitLength.
+            let msword := mload(add(result,0x20))                             // get most significant word of result
+            // if(msword==1 || msword>>(max_bitlen % 256)==1):
+            if or( eq(msword, 1), eq(shr(mod(max_bitlen,256),msword),1) ) {
+                    max_bitlen := add(max_bitlen, 1)                          // if msword's bit length is 1 greater 
+                                                                              // than max_bitlen, OR overflow occured,
+                                                                              // new bitlen is max_bitlen+1.
+                }
+        }
+        
+
+        return (result, max_bitlen);
+    }
+
+    /** @notice takes two BigNumber memory values and subtracts them.
+      * @dev _sub: This function is private and only callable from add: therefore the values may be of different sizes, 
+      *            in any order of size, and of different signs (handled in add).
+      *            As values may be of different sizes, inputs are considered starting from the least significant words,
+      *            working back. 
+      *            The function calculates the new bitlen (basically if bitlens are the same for max and min, 
+      *            max_bitlen++) and returns a new BigNumber memory value.
+      *
+      * @param max bytes -  biggest value  (determined from add)
+      * @param min bytes -  smallest value (determined from add)
+      * @return bytes result - max + min.
+      * @return uint - bit length of result.
+      */
+    function _sub(
+        bytes memory max, 
+        bytes memory min
+    ) internal pure returns (bytes memory, uint) {
+        bytes memory result;
+        uint carry = 0;
+        uint uint_max = type(uint256).max;
+        assembly {
+                
+            let result_start := msize()                                     // Get the highest available block of 
+                                                                            // memory
+        
+            let max_len := mload(max)
+            let min_len := mload(min)                                       // load lengths of inputs
+            
+            let len_diff := sub(max_len,min_len)                            // get differences in lengths.
+            
+            let max_ptr := add(max, max_len)
+            let min_ptr := add(min, min_len)                                // go to end of arrays
+            let result_ptr := add(result_start, max_len)                    // point to least significant result 
+                                                                            // word.
+            let memory_end := add(result_ptr,0x20)                          // save memory_end to update free memory
+                                                                            // pointer at the end.
+            
+            for { let i := max_len } eq(eq(i,0),0) { i := sub(i, 0x20) } {  // for(int i=max_length; i!=0; i-=32)
+                let max_val := mload(max_ptr)                               // get next word for 'max'
+                switch gt(i,len_diff)                                       // if(i>(max_length-min_length)). while
+                                                                            // 'min' words are still available.
+                    case 1{ 
+                        let min_val := mload(min_ptr)                       //  get next word for 'min'
+        
+                        mstore(result_ptr, sub(sub(max_val,min_val),carry)) //  result_word = (max_word-min_word)-carry
+                    
+                        switch or(lt(max_val, add(min_val,carry)), 
+                               and(eq(min_val,uint_max), eq(carry,1)))      //  this switch block finds whether or 
+                                                                            //  not to set the carry bit for the next iteration.
+                            case 1  { carry := 1 }
+                            default { carry := 0 }
+                            
+                        min_ptr := sub(min_ptr,0x20)                        //  point to next 'result' word
+                    }
+                    default {                                               // else: remainder after 'min' words are complete.
+
+                        mstore(result_ptr, sub(max_val,carry))              //      result_word = max_word-carry
+                    
+                        switch and( eq(max_val,0), eq(carry,1) )            //      this switch block finds whether or 
+                                                                            //      not to set the carry bit for the 
+                                                                            //      next iteration.
+                            case 1  { carry := 1 }
+                            default { carry := 0 }
+
+                    }
+                result_ptr := sub(result_ptr,0x20)                          // point to next 'result' word
+                max_ptr    := sub(max_ptr,0x20)                             // point to next 'max' word
+            }      
+
+            //the following code removes any leading words containing all zeroes in the result.
+            result_ptr := add(result_ptr,0x20)                                                 
+
+            // for(result_ptr+=32;; result==0; result_ptr+=32)
+            for { }   eq(mload(result_ptr), 0) { result_ptr := add(result_ptr,0x20) } { 
+               result_start := add(result_start, 0x20)                      // push up the start pointer for the result
+               max_len := sub(max_len,0x20)                                 // subtract a word (32 bytes) from the 
+                                                                            // result length.
+            } 
+
+            result := result_start                                          // point 'result' bytes value to 
+                                                                            // the correct address in memory
+            
+            mstore(result,max_len)                                          // store length of result. we 
+                                                                            // are finished with the byte array.
+            
+            mstore(0x40, memory_end)                                        // Update freemem pointer.
+        }
+
+        uint new_bitlen = bitLength(result);                                // calculate the result's 
+                                                                            // bit length.
+        
+        return (result, new_bitlen);
+    }
+
+    /** @notice gets the modulus value necessary for calculating exponetiation.
+      * @dev _powModulus: we must pass the minimum modulus value which would return JUST the a^b part of the calculation
+      *       in modexp. the rationale here is:
+      *       if 'a' has n bits, then a^e has at most n*e bits.
+      *       using this modulus in exponetiation will result in simply a^e.
+      *       therefore the value may be many words long.
+      *       This is done by:
+      *         - storing total modulus byte length
+      *         - storing first word of modulus with correct bit set
+      *         - updating the free memory pointer to come after total length.
+      *
+      * @param a BigNumber base
+      * @param e uint exponent
+      * @return BigNumber modulus result
+      */
+    function _powModulus(
+        BigNumber memory a, 
+        uint e
+    ) private pure returns(BigNumber memory){
+        bytes memory _modulus = ZERO;
+        uint mod_index;
+
+        assembly {
+            mod_index := mul(mload(add(a, 0x40)), e)               // a.bitlen * e is the max bitlength of result
+            let first_word_modulus := shl(mod(mod_index, 256), 1)  // set bit in first modulus word.
+            mstore(_modulus, mul(add(div(mod_index,256),1),0x20))  // store length of modulus
+            mstore(add(_modulus,0x20), first_word_modulus)         // set first modulus word
+            mstore(0x40, add(_modulus, add(mload(_modulus),0x20))) // update freemem pointer to be modulus index
+                                                                   // + length
+        }
+
+        //create modulus BigNumber memory for modexp function
+        return BigNumber(_modulus, false, mod_index); 
+    }
+
+    /** @notice Modular Exponentiation: Takes bytes values for base, exp, mod and calls precompile for (base^exp)%^mod
+      * @dev modexp: Wrapper for built-in modexp (contract 0x5) as described here: 
+      *              https://github.com/ethereum/EIPs/pull/198
+      *
+      * @param _b bytes base
+      * @param _e bytes base_inverse 
+      * @param _m bytes exponent
+      * @param r bytes result.
+      */
+    function _modexp(
+        bytes memory _b, 
+        bytes memory _e, 
+        bytes memory _m
+    ) private view returns(bytes memory r) {
+        assembly {
+            
+            let bl := mload(_b)
+            let el := mload(_e)
+            let ml := mload(_m)
+            
+            
+            let freemem := mload(0x40) // Free memory pointer is always stored at 0x40
+            
+            
+            mstore(freemem, bl)         // arg[0] = base.length @ +0
+            
+            mstore(add(freemem,32), el) // arg[1] = exp.length @ +32
+            
+            mstore(add(freemem,64), ml) // arg[2] = mod.length @ +64
+            
+            // arg[3] = base.bits @ + 96
+            // Use identity built-in (contract 0x4) as a cheap memcpy
+            let success := staticcall(450, 0x4, add(_b,32), bl, add(freemem,96), bl)
+            
+            // arg[4] = exp.bits @ +96+base.length
+            let size := add(96, bl)
+            success := staticcall(450, 0x4, add(_e,32), el, add(freemem,size), el)
+            
+            // arg[5] = mod.bits @ +96+base.length+exp.length
+            size := add(size,el)
+            success := staticcall(450, 0x4, add(_m,32), ml, add(freemem,size), ml)
+            
+            switch success case 0 { invalid() } //fail where we haven't enough gas to make the call
+
+            // Total size of input = 96+base.length+exp.length+mod.length
+            size := add(size,ml)
+            // Invoke contract 0x5, put return value right after mod.length, @ +96
+            success := staticcall(sub(gas(), 1350), 0x5, freemem, size, add(freemem, 0x60), ml)
+
+            switch success case 0 { invalid() } //fail where we haven't enough gas to make the call
+
+            let length := ml
+            let msword_ptr := add(freemem, 0x60)
+
+            ///the following code removes any leading words containing all zeroes in the result.
+            for { } eq ( eq(length, 0x20), 0) { } {                   // for(; length!=32; length-=32)
+                switch eq(mload(msword_ptr),0)                        // if(msword==0):
+                    case 1 { msword_ptr := add(msword_ptr, 0x20) }    //     update length pointer
+                    default { break }                                 // else: loop termination. non-zero word found
+                length := sub(length,0x20)                          
+            } 
+            r := sub(msword_ptr,0x20)
+            mstore(r, length)
+            
+            // point to the location of the return value (length, bits)
+            //assuming mod length is multiple of 32, return value is already in the right format.
+            mstore(0x40, add(add(96, freemem),ml)) //deallocate freemem pointer
+        }        
+    }
+    // ***************** END PRIVATE CORE CALCULATION FUNCTIONS ******************
+
+
+
+
+
+    // ***************** START PRIVATE HELPER FUNCTIONS ******************
+    /** @notice left shift BigNumber memory 'dividend' by 'value' bits.
+      * @param bn value to shift
+      * @param bits amount of bits to shift by
+      * @return r result
+      */
+    function _shl(
+        BigNumber memory bn, 
+        uint bits
+    ) private view returns(BigNumber memory r) {
         if(bits==0 || bn.bitlen==0) return bn;
         
         // we start by creating an empty bytes array of the size of the output, based on 'bits'.

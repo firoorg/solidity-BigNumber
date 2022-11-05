@@ -3,7 +3,7 @@
 
 ## Introduction
 
-With the first release of Metropolis, and the precompiled contract allowing modular exponentiations for arbitrary-sized inputs,  we can now process big integer functions on the EVM, ie. values greater than a single EVM word (256 bits). These functions can be used as the building blocks for various cryptographic operations, for example in RSA signature verification, and ring-signature schemes.
+With the release of Metropolis, and the precompiled contract allowing modular exponentiations for arbitrary-sized inputs,  we can now process big integer functions on the EVM, ie. values greater than a single EVM word (256 bits). These functions can be used as the building blocks for various cryptographic operations, for example in RSA signature verification, and ring-signature schemes.
 
 ## Overview
 Values in memory on the EVM are in 256 bit (32 byte) words - `BigNumber`s in this library are considered to be consecutive words in big-endian order (top to bottom: word `0` - word `n`).
@@ -48,7 +48,13 @@ The sign of the value is controlled artificially, as is the case with other big 
 
 
 ## Verification
-When performing computations that consume a lot of gas, it is advisable, where possible, to compute them off-chain and have them verified on-chain. In this library, this is possible with two functions: `div` and `inverse`. in both cases, the user passes the result of each computation along with the computation's inputs, and the contracts verifies that they were computed correctly, before returning the result.
+In performing computations that consume an impossibly large amount of gas, it is necessary to compute them off-chain and have them verified on-chain. In this library, this is possible with two functions: `divVerify` and `modinvVerify`. in both cases, the user must pass the result of each computation along with the computation's inputs, and the contracts verifies that they were computed correctly, before returning the result.
+To make this as frictionless as possible:
+    - Import your function into a Foundry test case
+    - use the `ffi` cheatcode to call the real function in an external library
+    - write the resulting calldata to be used for the function call.
+see `tests/differential` for examples of this.
+
 
 ## Development
 
