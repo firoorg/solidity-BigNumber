@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "../../src/interfaces/IBigNumbers.sol";
 import "../../src/BigNumbers.sol";
 import "./util/Strings.sol";
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
-contract BigNumbersDifferentialTest is Test {
-    using BigNumbers for *;
+contract BigNumbersDifferentialTest is Test, IBigNumbers {
+    using Management for *;
+    using Helpers for *;
+    using Core for *;
     using Strings for *;
     bytes constant ZERO = hex"0000000000000000000000000000000000000000000000000000000000000000";
     bytes constant  ONE = hex"0000000000000000000000000000000000000000000000000000000000000001";

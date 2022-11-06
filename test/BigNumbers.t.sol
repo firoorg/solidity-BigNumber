@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "forge-std/Test.sol";
+import "../src/interfaces/IBigNumbers.sol";
 import "../src/BigNumbers.sol";
 import "../src/utils/Crypto.sol";
+import "forge-std/Test.sol";
 
-contract BigNumbersTest is Test {
-    using BigNumbers for *;
+contract BigNumbersTest is Test, IBigNumbers {
     using Crypto for *;
+    using Management for *;
+    using Helpers for *;
+    using Core for *;
 
     function testRSA() public {
         bytes memory Msg = hex'68656c6c6f20776f726c64'; // "hello world" in hex
@@ -26,21 +29,21 @@ contract BigNumbersTest is Test {
         BigNumber memory bn;
 
         val = hex"ffffffff";
-        bn = BigNumbers.init(val, false, 36);
+        bn = val.init(false, 36);
         assertEq(bn.val.length,  0x20);
         assertEq(bn.val,  hex"00000000000000000000000000000000000000000000000000000000ffffffff");
         assertEq(bn.neg,  false);
         assertEq(bn.bitlen,  36);
 
         val = hex"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-        bn = BigNumbers.init(val, true);
+        bn = val.init(true);
         assertEq(bn.val.length,  0x20);
         assertEq(bn.val,  hex"00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         assertEq(bn.neg,  true);
         assertEq(bn.bitlen,  248);
 
         val = hex"0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-        bn = BigNumbers.init(val, false);
+        bn = val.init(false);
         assertEq(bn.val.length,  0x20);
         assertEq(bn.val,  hex"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         assertEq(bn.neg,  false);
@@ -76,19 +79,19 @@ contract BigNumbersTest is Test {
 
     function testLengths() public {
         BigNumber memory val = hex"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff".init(false);
-        assertEq(BigNumbers.bitLength(val), 256);
+        assertEq(val.bitLength(), 256);
         val = hex"0000000000000000000000000000000000000000000000000000000000000000".init(false);
-        assertEq(BigNumbers.bitLength(val), 0);
+        assertEq(val.bitLength(), 0);
         val = hex"0000000000000000000000000000000000000000000000000000000000000001".init(false);
-        assertEq(BigNumbers.bitLength(val), 1);
+        assertEq(val.bitLength(), 1);
         val = hex"f000000000000000000000000000000000000000000000000000000000000000".init(false);
-        assertEq(BigNumbers.bitLength(val), 256);
+        assertEq(val.bitLength(), 256);
 
-        assertEq(BigNumbers.bitLength(0), 0);
-        assertEq(BigNumbers.bitLength(1), 1);
-        assertEq(BigNumbers.bitLength(1 << 200), 201);
-        assertEq(BigNumbers.bitLength((1 << 200)+1), 201);
-        assertEq(BigNumbers.bitLength(1 << 255), 256);
+        assertEq(Helpers.bitLength(0), 0);
+        assertEq(Helpers.bitLength(1), 1);
+        assertEq(Helpers.bitLength(1 << 200), 201);
+        assertEq(Helpers.bitLength((1 << 200)+1), 201);
+        assertEq(Helpers.bitLength(1 << 255), 256);
     }
 
     function testShiftRight() public {

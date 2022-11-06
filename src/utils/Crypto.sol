@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "./../interfaces/IBigNumbers.sol";
 import "../BigNumbers.sol";
 
 library Crypto {
-    using BigNumbers for *;
+    using Management for *;
+    using Helpers for *;
+    using Core for *;
 
     /** @notice Verifies a PKCSv1.5 SHA256 signature
       * @dev credit: https://github.com/adria0/SolRsaVerify
@@ -55,8 +58,8 @@ library Crypto {
         BigNumber[3] memory randomness
     ) internal view returns (bool){
 
-        BigNumber memory one = BigNumbers.one();
-        BigNumber memory two = BigNumbers.two();
+        BigNumber memory one = Helpers.one();
+        BigNumber memory two = Helpers.two();
         
         int compare = a.cmp(two,true); 
         if (compare < 0){
@@ -204,8 +207,8 @@ library Crypto {
         BigNumber memory a1_odd, 
         uint k
     ) private view returns (int){
-        BigNumber memory one = BigNumbers.one();
-        BigNumber memory two = BigNumbers.two();
+        BigNumber memory one = Helpers.one();
+        BigNumber memory two = Helpers.two();
         // returns -  0: likely prime, 1: composite number (definite non-prime).
 
         w = w.modexp(a1_odd, a); // w := w^a1_odd mod a
