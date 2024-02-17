@@ -18,7 +18,7 @@ npm run compile
 Now you can run the tests.  
 From the root of the solidity-BigNumber repo, run:
 ```sh
-forge test -vvvv --ffi -c test/differential/BigNumbers.dt.sol
+forge test -vvvv --ffi --mc BigNumbersDifferentialTest
 ```
 
 

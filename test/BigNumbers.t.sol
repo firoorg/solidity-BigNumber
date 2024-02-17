@@ -10,15 +10,15 @@ contract BigNumbersTest is Test {
     using Crypto for *;
 
     function testRSA() public {
-        bytes memory Msg = hex'68656c6c6f20776f726c64'; // "hello world" in hex
+        bytes memory message = hex'68656c6c6f20776f726c64'; // "hello world" in hex
 
-        BigNumber memory S = hex"079bed733b48d69bdb03076cb17d9809072a5a765460bc72072d687dba492afe951d75b814f561f253ee5cc0f3d703b6eab5b5df635b03a5437c0a5c179309812f5b5c97650361c645bc99f806054de21eb187bc0a704ed38d3d4c2871a117c19b6da7e9a3d808481c46b22652d15b899ad3792da5419e50ee38759560002388".init(false);
+        BigNumber memory signature = hex"079bed733b48d69bdb03076cb17d9809072a5a765460bc72072d687dba492afe951d75b814f561f253ee5cc0f3d703b6eab5b5df635b03a5437c0a5c179309812f5b5c97650361c645bc99f806054de21eb187bc0a704ed38d3d4c2871a117c19b6da7e9a3d808481c46b22652d15b899ad3792da5419e50ee38759560002388".init(false);
 
-        BigNumber memory e = hex"010001".init(false);
+        BigNumber memory exponent = hex"010001".init(false);
 
-        BigNumber memory nn = hex"df3edde009b96bc5b03b48bd73fe70a3ad20eaf624d0dc1ba121a45cc739893741b7cf82acf1c91573ec8266538997c6699760148de57e54983191eca0176f518e547b85fe0bb7d9e150df19eee734cf5338219c7f8f7b13b39f5384179f62c135e544cb70be7505751f34568e06981095aeec4f3a887639718a3e11d48c240d".init(false);
+        BigNumber memory  modulus = hex"df3edde009b96bc5b03b48bd73fe70a3ad20eaf624d0dc1ba121a45cc739893741b7cf82acf1c91573ec8266538997c6699760148de57e54983191eca0176f518e547b85fe0bb7d9e150df19eee734cf5338219c7f8f7b13b39f5384179f62c135e544cb70be7505751f34568e06981095aeec4f3a887639718a3e11d48c240d".init(false);
 
-        assertEq(Crypto.pkcs1Sha256VerifyRaw(Msg, S, e, nn), 0);
+        assertEq(Crypto.pkcs1Sha256VerifyRaw(message, signature, exponent, modulus), 0);
     }
 
     function testInit() public {
@@ -48,10 +48,18 @@ contract BigNumbersTest is Test {
     }
 
     function testVerify() public pure {
-        BigNumber memory bn = BigNumber({
+        BigNumber memory bn;
+        bn = BigNumber({
             val: hex"00000000000000000000000000000000000000000000bccc69e47d98498430b725f7ff5af5be936fb1ccde3fdcda3b0882a9082eab761e75b34da18d8923d70b481d89e2e936eecec248b3d456b580900a18bcd39b3948bc956139367b89dde7",
             neg: false,
             bitlen: 592
+        });
+        bn.verify();
+
+        bn = BigNumber({
+            val: hex"8000000000000000000000000000000000000000000000000000000000000000",
+            neg: false,
+            bitlen: 256
         });
         bn.verify();
     }
@@ -247,19 +255,27 @@ contract BigNumbersTest is Test {
         a.divVerify(b, res);
     }
 
-    function testModMul() public view {
+    function testModMul() public {
         bytes memory _a = hex"1f78";
         bytes memory _b = hex"0309";
         bytes memory _m = hex"3178";
         BigNumber memory a = _a.init(false);
         BigNumber memory b = _b.init(false);
         BigNumber memory m = _m.init(false);
-    
         BigNumber memory res = a.modmul(b, m);
+    
+        bytes memory _g = hex"04";
+        bytes memory _x = hex"03";
+        bytes memory _p = hex"0800";
+        BigNumber memory g = _g.init(false);
+        BigNumber memory x = _x.init(false);
+        BigNumber memory p = _p.init(false);
+    
+        BigNumber memory newRes = g.modmul(x, p);
 
-        console.log('res out:');
-        console.logBytes(res.val);
-        console.logBool(res.neg);
+        assertEq(newRes.val, hex"0c");
+        assertEq(newRes.bitlen, 4);
+        assertEq(newRes.neg, false);
     }
 
     function testMul() public {
