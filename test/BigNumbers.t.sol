@@ -264,6 +264,10 @@ contract BigNumbersTest is Test {
         BigNumber memory m = _m.init(false);
         BigNumber memory res = a.modmul(b, m);
     
+        assertEq(res.val, hex"0000000000000000000000000000000000000000000000000000000000000da8");
+        assertEq(res.bitlen, 12);
+        assertEq(res.neg, false);
+
         bytes memory _g = hex"04";
         bytes memory _x = hex"03";
         bytes memory _p = hex"0800";
@@ -273,7 +277,7 @@ contract BigNumbersTest is Test {
     
         BigNumber memory newRes = g.modmul(x, p);
 
-        assertEq(newRes.val, hex"0c");
+        assertEq(newRes.val, hex"000000000000000000000000000000000000000000000000000000000000000c");
         assertEq(newRes.bitlen, 4);
         assertEq(newRes.neg, false);
     }
