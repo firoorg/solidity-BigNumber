@@ -99,6 +99,35 @@ contract BigNumbersTest is Test {
         assertEq(BigNumbers.bitLength(1 << 255), 256);
     }
 
+    function testAdd() public {
+        BigNumber memory lhs = hex"010000000000000000000000000000000000000000000000000000000000000001".init(false);
+        BigNumber memory rhs = hex"01".init(false);
+
+        BigNumber memory r = lhs.add(rhs);
+
+        assertEq(r.val, hex"00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002");
+        assertEq(r.bitlen, 257);
+        assertEq(r.neg, false);
+
+        lhs = hex"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff".init(false);
+        rhs = hex"01".init(false);
+
+        r = lhs.add(rhs);
+
+        assertEq(r.val, hex"00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000");
+        assertEq(r.bitlen, 257);
+        assertEq(r.neg, false);
+
+        lhs = hex"0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff".init(false);
+        rhs = hex"01".init(false);
+
+        r = lhs.add(rhs);
+
+        assertEq(r.val, hex"00000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000");
+        assertEq(r.bitlen, 261);
+        assertEq(r.neg, false);
+    }
+
     function testShiftRight() public {
         // shift by value greater than word length
         BigNumber memory r;
