@@ -1,0 +1,57 @@
+name: test
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+  workflow_dispatch:
+
+env:
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  check:
+    strategy:
+      fail-fast: true
+
+    name: Foundry project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1.2.0
+
+      - name: Run Forge build
+        run: |
+          forge build --skip test --sizes
+          forge build
+        id: build
+
+      - name: Run Forge unit tests
+        run: |
+          forge test --mc BigNumbersTest -vvv
+        id: test
+
+      # Node.js setup and differential testing steps
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '14.17'
+
+      - name: Install Node.js dependencies
+        working-directory: ./test/differential/scripts
+        run: npm install
+
+      - name: Compile Node.js project
+        working-directory: ./test/differential/scripts
+        run: npm run compile
+
+      - name: Run differential Forge test
+        run: |
+          forge test -vvv --ffi --mc BigNumbersDifferentialTest
+        id: differential-test
