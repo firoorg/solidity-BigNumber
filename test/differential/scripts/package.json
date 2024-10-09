@@ -9,7 +9,8 @@
     "bn.js": "^5.2.1",
     "ethereumjs-util": "^7.1.4",
     "rlp": "^3.0.0",
-    "typescript": "^4.8.4"
+    "typescript": "^4.8.4",
+    "ethers": "^5.7.1"
   },
   "scripts": {
     "compile": "npx tsc --esModuleInterop ./*.ts",
