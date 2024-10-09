@@ -55,14 +55,17 @@ The sign of the value is controlled artificially, as is the case with other big 
 In performing computations that consume an impossibly large amount of gas, it is necessary to compute them off-chain and have them verified on-chain. In this library, this is possible with two functions: `divVerify` and `modinvVerify`. in both cases, the user must pass the result of each computation along with the computation's inputs, and the contracts verifies that they were computed correctly, before returning the result.
 
 To make this as frictionless as possible:
+
     - Import your function into a Foundry test case
+
     - use the `ffi` cheatcode to call the real function in an external library
+
     - write the resulting calldata to be used for the function call.
 
 see `tests/differential` for examples of this.
 
 ## Usage
-If you're functions directly take `BigNumber`s as arguments, it is required to first call `verify()` on these values to ensure that they are in the right format. See `src/utils/Crypto.sol` for an example of this.
+If your functions directly take `BigNumber`s as arguments, it is required to first call `verify()` on these values to ensure that they are in the right format. See `src/utils/Crypto.sol` for an example of this.
 
 ## Crypto
 The library `src/utils/Crypto.sol` contains some common algorithms that can be used with this `BigNumber` library. Is also shows some example usage.
